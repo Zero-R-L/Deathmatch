@@ -21,7 +21,7 @@
 - Can be run as an event using Cedmod
 
 ## Install
-~~### LocalAdmin~~
+### ~~LocalAdmin~~
 ~~To install via LocalAdmin console use "p install Zero-R-L/Deathmatch"~~
 
 ### Manual

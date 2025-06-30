@@ -22,7 +22,7 @@
 
 ## Install
 ### ~~LocalAdmin~~
-~~To install via LocalAdmin console use "p install Zero-R-L/Deathmatch"~~ **Do NOT use it, as it will be installed under the Plugin API plugin file**
+~~To install via LocalAdmin console use "p install Zero-R-L/Deathmatch"~~ **Do NOT use it, as it will be installed under the PluginAPI plugin file**
 
 ### Manual
 To manually install put Deathmatch.dll in PluginAPI/plugins/"your server port number"/ and put everything inside the dependencies.zip inside PluginAPI/plugins/"your server port number"/dependencies/. You can also get the dependencies here [LiteDB.dll](https://github.com/mbdavid/LiteDB), [Glicko2.dll](https://github.com/ikhanage/Glicko2) and [0Harmony.dll](https://github.com/pardeike/Harmony)

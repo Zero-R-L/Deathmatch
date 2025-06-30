@@ -1,11 +1,16 @@
-﻿using LightContainmentZoneDecontamination;
+﻿using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Arguments.Scp914Events;
+using LabApi.Events.Arguments.ServerEvents;
+using LabApi.Events.CustomHandlers;
+using LabApi.Features.Wrappers;
+using LightContainmentZoneDecontamination;
 using MEC;
 using PlayerRoles;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
-using PluginAPI.Events;
+
+
+
+
 using Scp914;
 using System;
 using System.Collections.Generic;
@@ -17,7 +22,7 @@ using static TheRiptide.Translation;
 
 namespace TheRiptide
 {
-    public class DmRound
+    public class DmRound : CustomEventsHandler
     {
         public static DmRound Singleton { get; private set; }
 
@@ -39,13 +44,13 @@ namespace TheRiptide
             {
                 if (value == true)
                 {
-                    foreach (var player in Player.GetPlayers())
+                    foreach (var player in Player.List)
                         if (player.IsAlive)
                             Killstreaks.Singleton.AddKillstreakStartEffects(player);
                 }
                 else
                 {
-                    foreach (var player in Player.GetPlayers())
+                    foreach (var player in Player.List)
                         if (player.IsAlive)
                             Lobby.ApplyGameNotStartedEffects(player);
                 }
@@ -62,12 +67,13 @@ namespace TheRiptide
             {
                 try
                 {
+                    if (Server.Host == null) return;
                     ServerConsole.FriendlyFire = true;
                     FriendlyFireConfig.PauseDetector = true;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("config override error: " + ex.ToString());
+                    Logger.Error("config override error: " + ex.ToString());
                 }
             });
         }
@@ -83,7 +89,10 @@ namespace TheRiptide
             Database.Singleton.Checkpoint();
         }
 
-        [PluginEvent(ServerEventType.RoundStart)]
+        public override void OnServerRoundStarted()
+        {
+            OnRoundStart();
+        }
         void OnRoundStart()
         {
             if (config.RoundTime > 5.0f)
@@ -97,18 +106,18 @@ namespace TheRiptide
                     restart_handle = Timing.CallDelayed(config.RoundEndTime, () => Round.Restart(false));
                     Timing.CallPeriodically(config.RoundEndTime, 0.2f, () =>
                     {
-                        foreach (var p in Player.GetPlayers())
+                        foreach (var p in Player.List)
                             p.IsGodModeEnabled = true;
                     });
                     try { Statistics.DisplayRoundStats(); }
-                    catch (Exception ex) { Log.Error(ex.ToString()); }
+                    catch (Exception ex) { Logger.Error(ex.ToString()); }
                     try { Experiences.Singleton.SaveExperiences(); }
-                    catch (Exception ex) { Log.Error(ex.ToString()); }
+                    catch (Exception ex) { Logger.Error(ex.ToString()); }
                     try { Ranks.Singleton.CalculateAndSaveRanks(); }
-                    catch (Exception ex) { Log.Error(ex.ToString()); }
+                    catch (Exception ex) { Logger.Error(ex.ToString()); }
                     HintOverride.Refresh();
                     VoiceChat.Singleton.ForceGlobalTalkGlobalReceive();
-                    Server.Instance.SetRole(RoleTypeId.Spectator);
+                    Server.Host.SetRole(RoleTypeId.Spectator);
                     game_ended = true;
                     Tracking.Singleton.UpdateLeaderBoard();
                     LeaderBoard.Singleton.ReloadLeaderBoard();
@@ -117,7 +126,7 @@ namespace TheRiptide
                         LeaderBoard.Singleton.EnableTitle = false;
                         Timing.CallDelayed(Deathmatch.Singleton.leader_board_config.DisplayEndRoundDelay, () =>
                         {
-                            foreach (var p in Player.GetPlayers())
+                            foreach (var p in Player.List)
                                 if (p.IsReady)
                                     LeaderBoard.Singleton.EnableLeaderBoardMode(p, Enum.IsDefined(typeof(LeaderBoardType), Deathmatch.Singleton.leader_board_config.LeaderBoardType) ? (LeaderBoardType)Deathmatch.Singleton.leader_board_config.LeaderBoardType : (LeaderBoardType)UnityEngine.Random.Range(0, Enum.GetValues(typeof(LeaderBoardType)).Length));
                         });
@@ -125,21 +134,23 @@ namespace TheRiptide
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("round end Error: " + ex.ToString());
+                    Logger.Error("round end Error: " + ex.ToString());
                 }
             });
 
-            Log.Info($"Server.Instance.IpAddress: {Server.Instance.IpAddress == null}");
-            Server.Instance.SetRole(RoleTypeId.Scp939);
-            Server.Instance.ReferenceHub.nicknameSync.SetNick(config.DummyPlayerName);
-            Server.Instance.Position = new Vector3(128.8f, 994.0f, 18.0f);
+            Logger.Info($"Server.Host.IpAddress: {Server.Host.IpAddress == null}");
+            Server.Host.SetRole(RoleTypeId.Scp939);
+            Server.Host.ReferenceHub.nicknameSync.SetNick(config.DummyPlayerName);
+            Server.Host.Position = new Vector3(128.8f, 994.0f, 18.0f);
             Round.IsLocked = true;
             Warhead.IsLocked = true;
             DecontaminationController.Singleton.NetworkDecontaminationOverride = DecontaminationController.DecontaminationStatus.Disabled;
             AttackerDamageHandler._ffMultiplier = 1.0f;
         }
-
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             players.Add(player.PlayerId);
@@ -149,22 +160,23 @@ namespace TheRiptide
                 Timing.CallDelayed(1.0f, () => { HintOverride.Add(player, 0, translation.DntMsg, 30.0f); HintOverride.Refresh(player); });
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             players.Remove(player.PlayerId);
         }
 
-        [PluginEvent(ServerEventType.Scp914Activate)]
-        bool OnScp914Activate(Player player, Scp914KnobSetting knob_setting)
+        public override void OnScp914Activating(Scp914ActivatingEventArgs ev)
         {
-            return false;
+            ev.IsAllowed = false;
         }
 
-        [PluginEvent(ServerEventType.RoundEndConditionsCheck)]
-        RoundEndConditionsCheckCancellationData OnRoundEndConditionsCheck(bool baseGameConditionsSatisfied)
+        public override void OnServerRoundEndingConditionsCheck(RoundEndingConditionsCheckEventArgs ev)
         {
-            return RoundEndConditionsCheckCancellationData.Override(false);
+            ev.CanEnd = false;
         }
 
         public void RoundRestart()

@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using LiteDB;
 using MEC;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using UnityEngine;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -16,6 +16,9 @@ using PlayerRoles.FirstPersonControl;
 using static TheRiptide.Translation;
 using CommandSystem;
 using RemoteAdmin;
+using LabApi.Events.CustomHandlers;
+using LabApi.Loader;
+using LabApi.Events.Arguments.PlayerEvents;
 
 namespace TheRiptide
 {
@@ -82,7 +85,7 @@ namespace TheRiptide
 
     enum LeaderBoardType { Rank, Experience, Killstreak, Kills, Time }
 
-    class LeaderBoard
+    class LeaderBoard : CustomEventsHandler
     {
         public static LeaderBoard Singleton { get; private set; }
 
@@ -167,11 +170,13 @@ namespace TheRiptide
             if (dirty)
                 RebuildLeaderBoard();
 
-            PluginHandler handler = PluginHandler.Get(Deathmatch.Singleton);
-            handler.SaveConfig(Deathmatch.Singleton, nameof(Deathmatch.Singleton.leader_board_config));
+            Deathmatch.Singleton.SaveConfig(config, "leader_board_config.yml");
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             if (player_leader_board_state.ContainsKey(player.PlayerId))
@@ -274,7 +279,7 @@ namespace TheRiptide
                 {
                     try
                     {
-                        foreach (var p in Player.GetPlayers())
+                        foreach (var p in Player.List)
                         {
                             if (p != null && p.UserId != null && user_index.ContainsKey(p.UserId) && player_details[user_index[p.UserId]] == rd)
                             {
@@ -285,7 +290,7 @@ namespace TheRiptide
                     }
                     catch(Exception ex)
                     {
-                        Log.Error("connection highlight error: " + ex.ToString());
+                        Logger.Error("connection highlight error: " + ex.ToString());
                     }
                     string ks_color = config.RecordColor;
                     if (Killstreaks.Singleton.config.KillstreakTables.ContainsKey(rd.killstreak_tag))
@@ -419,7 +424,7 @@ namespace TheRiptide
                         }
                         catch (System.Exception ex)
                         {
-                            Log.Error("update leaderboard error: " + ex.ToString());
+                            Logger.Error("update leaderboard error: " + ex.ToString());
                         }
                     }
                 });
@@ -428,7 +433,7 @@ namespace TheRiptide
 
         public void RebuildLeaderBoard()
         {
-            Log.Info("Rebuilding leader board");
+            Logger.Info("Rebuilding leader board");
             Database.Singleton.Async((db) =>
             {
                 Stopwatch stopwatch = new Stopwatch();
@@ -487,7 +492,7 @@ namespace TheRiptide
                 stopwatch.Stop();
                 Timing.CallDelayed(0.0f,()=>
                 {
-                    Log.Info("Finished rebuilding leader board. Time: " + stopwatch.Elapsed.ToString());
+                    Logger.Info("Finished rebuilding leader board. Time: " + stopwatch.Elapsed.ToString());
                 });
             });
         }
@@ -566,7 +571,7 @@ namespace TheRiptide
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("LeaderBoard _Controller error: " + ex.ToString());
+                        Logger.Error("LeaderBoard _Controller error: " + ex.ToString());
                         player_leader_board_state.Remove(id);
                     }
                 }

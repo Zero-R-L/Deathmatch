@@ -1,14 +1,11 @@
-﻿using InventorySystem.Items.Armor;
-using InventorySystem.Items.Firearms;
-using InventorySystem.Items.Firearms.Ammo;
-using InventorySystem.Items.Keycards;
-using InventorySystem.Items.Pickups;
+﻿using LabApi.Events.CustomHandlers;
+using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
 using PlayerRoles.Ragdolls;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,7 +35,7 @@ namespace TheRiptide
         public int RagdollCleanupPeriod { get; set; } = -1;
     }
 
-    class Cleanup
+    class Cleanup : CustomEventsHandler
     {
         public static Cleanup Singleton { get; private set; }
 
@@ -56,24 +53,26 @@ namespace TheRiptide
             this.config = config;
         }
 
-        [PluginEvent(ServerEventType.RoundStart)]
+        public override void OnServerRoundStarted()
+        {
+            OnRoundStart();
+        }
         void OnRoundStart()
         {
             Timing.CallDelayed(1.0f, () =>
             {
-                ItemPickupBase[] items = UnityEngine.Object.FindObjectsOfType<ItemPickupBase>();
-                int num = items.Length;
-                for (int i = 0; i < num; i++)
-                    if (!config.InitialCleanupWhitelist.Contains(items[i].NetworkInfo.ItemId))
-                        NetworkServer.Destroy(items[i].gameObject);
+                foreach (var item in Pickup.List)
+                {
+                    item.Destroy();
+                }
 
                 Timing.KillCoroutines(item_cleanup);
                 if (config.ItemCleanupPeriod >= 0)
-                    item_cleanup = Timing.RunCoroutine(_ItemCleanup());
+                    item_cleanup = Timing.RunCoroutine(ItemCleanup());
 
                 Timing.KillCoroutines(ragdoll_cleanup);
                 if (config.RagdollCleanupPeriod >= 0)
-                    ragdoll_cleanup = Timing.RunCoroutine(_RagdollCleanup());
+                    ragdoll_cleanup = Timing.RunCoroutine(RagdollCleanup());
             });
         }
 
@@ -82,51 +81,43 @@ namespace TheRiptide
             Timing.KillCoroutines(item_cleanup, ragdoll_cleanup);
         }
 
-        private IEnumerator<float> _ItemCleanup()
+        private IEnumerator<float> ItemCleanup()
         {
-            while(true)
+            for (; ; )
             {
                 try
                 {
-                    ItemPickupBase[] items = UnityEngine.Object.FindObjectsOfType<ItemPickupBase>();
-                    int num = items.Length;
-                    for (int i = 0; i < num; i++)
+                    foreach (var item in Pickup.List)
                     {
-                        ItemPickupBase item = items[i];
-                        if (item is AmmoPickup)
-                            NetworkServer.Destroy(items[i].gameObject);
-                        else if (item is BodyArmorPickup)
-                            NetworkServer.Destroy(items[i].gameObject);
-                        else if (item is FirearmPickup)
-                            NetworkServer.Destroy(items[i].gameObject);
-                        else if (item is KeycardPickup)
-                            NetworkServer.Destroy(items[i].gameObject);
-                        else if (config.ItemCleanupBlacklist.Contains(item.NetworkInfo.ItemId))
-                            NetworkServer.Destroy(items[i].gameObject);
+                        if (item is AmmoPickup || item is BodyArmorPickup || item is FirearmPickup || item is KeycardPickup || config.ItemCleanupBlacklist.Contains(item.Type))
+                        {
+                            item.Destroy();
+                        }
                     }
                 }
                 catch(Exception ex)
                 {
-                    Log.Error("_ItemCleaup Error: " + ex.ToString());
+                    Logger.Error("ItemCleaup Error: " + ex.ToString());
                 }
 
                 yield return Timing.WaitForSeconds(config.ItemCleanupPeriod);
             }
         }
 
-        private IEnumerator<float> _RagdollCleanup()
+        private IEnumerator<float> RagdollCleanup()
         {
             while (true)
             {
                 try
                 {
-                    BasicRagdoll[] ragdolls = UnityEngine.Object.FindObjectsOfType<BasicRagdoll>();
-                    foreach (var ragdoll in ragdolls)
-                        NetworkServer.Destroy(ragdoll.gameObject);
+                    foreach (var item in Ragdoll.List)
+                    {
+                        item.Destroy();
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("_RagdollCleaup Error: " + ex.ToString());
+                    Logger.Error("RagdollCleaup Error: " + ex.ToString());
                 }
 
                 yield return Timing.WaitForSeconds(config.RagdollCleanupPeriod);

@@ -3,10 +3,10 @@ using InventorySystem.Items.Firearms;
 using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Armor;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Core.Items;
-using PluginAPI.Enums;
+
+
+
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -16,6 +16,9 @@ using static TheRiptide.Translation;
 using InventorySystem.Items.Firearms.Modules;
 using InventorySystem;
 using System.Runtime.ExceptionServices;
+using LabApi.Events.CustomHandlers;
+using LabApi.Events.Arguments.PlayerEvents;
+using MEC;
 
 namespace TheRiptide
 {
@@ -474,7 +477,7 @@ namespace TheRiptide
         };
     }
 
-    public class Killstreaks
+    public class Killstreaks : CustomEventsHandler
     {
         public static Killstreaks Singleton { get; private set; }
 
@@ -500,14 +503,20 @@ namespace TheRiptide
                 throw new System.Exception("Killstreak Config Error: KillstreakTables must contain the DefaultKillstreak");
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!player_killstreak.ContainsKey(player.PlayerId))
                 player_killstreak.Add(player.PlayerId, new Killstreak { name = config.DefaultKillstreak });
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             if (player_killstreak.ContainsKey(player.PlayerId))
@@ -518,7 +527,10 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerDeath)]
+        public override void OnPlayerDeath(PlayerDeathEventArgs ev)
+        {
+            OnPlayerDeath(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDeath(Player victim, Player killer, DamageHandlerBase damage)
         {
             if (killer != null && player_killstreak.ContainsKey(killer.PlayerId))
@@ -540,7 +552,7 @@ namespace TheRiptide
                     int ammo_index = CalculateIndex(killstreak.count, table.AmmoTable.Last().Key, table.AmmoOverflowAction);
                     if(table.AmmoTable.ContainsKey(ammo_index))
                     {
-                        Firearm firearm = killer.CurrentItem as Firearm;
+                        Firearm firearm = killer.CurrentItem.Base as Firearm;
                         if (firearm != null && damage is FirearmDamageHandler fdh && firearm.ItemTypeId == fdh.WeaponType && !(firearm is ParticleDisruptor))
                             foreach (AmmoReward reward in table.AmmoTable[ammo_index])
                                 GrantAmmoReward(killer, firearm, reward);
@@ -657,18 +669,25 @@ namespace TheRiptide
 
         public void AddKillstreakStartEffects(Player player)
         {
-            Killstreak killstreak = player_killstreak[player.PlayerId];
-            player.EffectsManager.DisableAllEffects();
-            KillstreakRewardTable table = config.KillstreakTables[killstreak.name];
+            try
+            {
+                Killstreak killstreak = player_killstreak[player.PlayerId];
+                player.ReferenceHub.playerEffectsController.DisableAllEffects();
+                KillstreakRewardTable table = config.KillstreakTables[killstreak.name];
 
-            if (!table.PlayerTable.IsEmpty() && table.PlayerTable.ContainsKey(0))
-                foreach (PlayerReward reward in table.PlayerTable[0])
-                    GrantPlayerReward(player, reward);
+                if (!table.PlayerTable.IsEmpty() && table.PlayerTable.ContainsKey(0))
+                    foreach (PlayerReward reward in table.PlayerTable[0])
+                        GrantPlayerReward(player, reward);
 
-            if (!table.EffectTable.IsEmpty() && table.EffectTable.ContainsKey(0))
-                foreach (EffectReward reward in table.EffectTable[0])
-                    GrantEffectReward(player, reward);
+                if (!table.EffectTable.IsEmpty() && table.EffectTable.ContainsKey(0))
+                    foreach (EffectReward reward in table.EffectTable[0])
+                        GrantEffectReward(player, reward);
 
+            }
+            catch (System.Exception e)
+            {
+                Logger.Error(e);
+            }
         }
 
         public ItemType ArmorType(Player player)
@@ -796,9 +815,10 @@ namespace TheRiptide
             }
         }
 
+
         private void GrantEffectReward(Player player, EffectReward reward)
         {
-            player.EffectsManager.ChangeState(reward.Effect, reward.Intensity, reward.Duration);
+            player.ReferenceHub.playerEffectsController.ChangeState(reward.Effect, reward.Intensity, reward.Duration);
         }
 
         private void GrantItemReward(Player player, ItemReward reward)

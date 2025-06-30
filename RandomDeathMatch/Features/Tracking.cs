@@ -1,9 +1,9 @@
 ﻿using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Firearms;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +13,8 @@ using static TheRiptide.Utility;
 using UnityEngine;
 using CommandSystem;
 using RemoteAdmin;
+using LabApi.Events.CustomHandlers;
+using LabApi.Events.Arguments.PlayerEvents;
 
 namespace TheRiptide
 {
@@ -29,7 +31,7 @@ namespace TheRiptide
         };
     }
 
-    public class Tracking
+    public class Tracking : CustomEventsHandler
     {
         public static Tracking Singleton { get; private set; }
         private TrackingConfig config;
@@ -61,7 +63,7 @@ namespace TheRiptide
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("on damage error: " + ex.ToString());
+                        Logger.Error("on damage error: " + ex.ToString());
                     }
                 });
                 PlayerStats.OnAnyPlayerDamaged += OnPlayerDamaged;
@@ -73,7 +75,10 @@ namespace TheRiptide
             current_round = null;
         }
 
-        [PluginEvent(ServerEventType.RoundStart)]
+        public override void OnServerRoundStarted()
+        {
+            OnRoundStart();
+        }
         void OnRoundStart()
         {
             if (config.TrackRounds)
@@ -84,7 +89,10 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             int id = player.PlayerId;
@@ -102,7 +110,10 @@ namespace TheRiptide
                     current_round.max_players = Player.Count;
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             int id = player.PlayerId;
@@ -119,7 +130,10 @@ namespace TheRiptide
                 player_life.Remove(id);
         }
 
-        [PluginEvent(ServerEventType.PlayerDeath)]
+        public override void OnPlayerDeath(PlayerDeathEventArgs ev)
+        {
+            OnPlayerDeath(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDeath(Player victim, Player killer, DamageHandlerBase damage)
         {
             if(victim != null && killer != null && player_life.ContainsKey(victim.PlayerId) && player_life.ContainsKey(killer.PlayerId))
@@ -137,7 +151,10 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerDamage)]
+        public override void OnPlayerHurt(PlayerHurtEventArgs ev)
+        {
+            OnPlayerDamage(ev.Attacker, ev.Player, ev.DamageHandler);
+        }
         void OnPlayerDamage(Player attacker, Player victim, DamageHandlerBase damage)
         {
             if (config.TrackHits && victim != null && attacker != null && player_life.ContainsKey(victim.PlayerId) && player_life.ContainsKey(attacker.PlayerId))
@@ -156,7 +173,10 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerShotWeapon)]
+        public override void OnPlayerShotWeapon(PlayerShotWeaponEventArgs ev)
+        {
+            OnPlayerShotWeapon(ev.Player, ev.FirearmItem.Base);
+        }
         void OnPlayerShotWeapon(Player player, Firearm firearm)
         {
             if(player != null)
@@ -182,7 +202,7 @@ namespace TheRiptide
                 }
                 catch(Exception ex)
                 {
-                    Log.Error(ex.ToString());
+                    Logger.Error(ex.ToString());
                 }
             }
         }

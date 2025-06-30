@@ -1,7 +1,9 @@
-﻿using MEC;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+﻿using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.CustomHandlers;
+using MEC;
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace TheRiptide
 {
-    class HintOverride
+    class HintOverride : CustomEventsHandler
     {
         class HintInfo
         {
@@ -76,7 +78,7 @@ namespace TheRiptide
                     if (hint.duration > 0.0f)
                         msg += hint.msg;
 
-                player.ReceiveHint(msg, 300);
+                player.SendHint(msg, 300);
 
                 float min = 300.0f;
                 bool any_active = false;
@@ -111,14 +113,20 @@ namespace TheRiptide
 
         private static Dictionary<int, HintInfo> hint_info = new Dictionary<int, HintInfo>();
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!hint_info.ContainsKey(player.PlayerId))
                 hint_info.Add(player.PlayerId, new HintInfo());
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             if (hint_info.ContainsKey(player.PlayerId))
@@ -151,7 +159,7 @@ namespace TheRiptide
 
         public static void Refresh()
         {
-            foreach (var p in Player.GetPlayers())
+            foreach (var p in Player.List)
                 if (p.IsReady && hint_info.ContainsKey(p.PlayerId))
                     hint_info[p.PlayerId].Refresh(p);
         }

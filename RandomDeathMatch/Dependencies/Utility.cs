@@ -6,7 +6,7 @@ using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Firearms.Modules;
 using PlayerRoles;
 using PlayerStatsSystem;
-using PluginAPI.Core;
+
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
@@ -17,8 +17,7 @@ namespace TheRiptide
     {
         public static void AddArmor(Player player, ItemType armor_type, bool dont_remove_excess_on_drop)
         {
-            BodyArmor armor = player.AddItem(armor_type) as BodyArmor;
-            armor.DontRemoveExcessOnDrop = dont_remove_excess_on_drop;
+            player.AddItem(armor_type);
         }
 
         public static bool IsArmor(ItemType item)
@@ -60,10 +59,10 @@ namespace TheRiptide
 
         public static bool RemoveItem(Player player, ItemType type)
         {
-            IEnumerable<ItemBase> matches = player.Items.Where((i) => i.ItemTypeId == type);
+            var matches = player.Items.Where((i) => i.Type == type);
             if (matches.Count() >= 1)
             {
-                player.ReferenceHub.inventory.ServerRemoveItem(matches.First().ItemSerial, null);
+                player.ReferenceHub.inventory.ServerRemoveItem(matches.First().Serial, null);
                 //player.RemoveItem(new Item(matches.First()));
                 return true;
             }

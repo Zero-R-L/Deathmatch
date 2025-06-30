@@ -1,10 +1,13 @@
 ﻿using CommandSystem;
 using InventorySystem.Items;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.CustomHandlers;
+using LabApi.Features.Wrappers;
 using MEC;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using RemoteAdmin;
 using System;
 using System.Collections.Generic;
@@ -181,7 +184,7 @@ namespace TheRiptide
         };
     }
 
-    public class Experiences
+    public class Experiences : CustomEventsHandler
     {
         public static Experiences Singleton { get; private set; }
         public ExperienceConfig config;
@@ -215,18 +218,24 @@ namespace TheRiptide
             this.config = config;
         }
 
-        [PluginEvent(ServerEventType.RoundStart)]
+        public override void OnServerRoundStarted()
+        {
+            OnRoundStart();
+        }
         void OnRoundStart()
         {
-            Timing.CallDelayed(30.0f, ()=>
+            Timing.CallDelayed(30.0f, () =>
             {
-                foreach (var player in Player.GetPlayers())
+                foreach (var player in Player.List)
                     if (player != null && player_xp.ContainsKey(player.PlayerId))
                         RewardXp(player, config.XpOnRoundStart, translation.RewardXpRoundStart);
             });
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             int id = player.PlayerId;
@@ -243,7 +252,10 @@ namespace TheRiptide
                 player_tracking.Add(id, new Tracking());
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             int id = player.PlayerId;
@@ -257,21 +269,26 @@ namespace TheRiptide
                 previous_xp.Remove(id);
         }
 
-        [PluginEvent(ServerEventType.PlayerUsedItem)]
+        public override void OnPlayerUsedItem(PlayerUsedItemEventArgs ev)
+        {
+            OnPlayerUsedItem(ev.Player, ev.UsableItem.Base);
+        }
         void OnPlayerUsedItem(Player player, ItemBase item)
         {
             if (player != null && config.XpOnItemUse.ContainsKey(item.ItemTypeId))
                 RewardXp(player, config.XpOnItemUse[item.ItemTypeId], translation.RewardXpItemUsed.Replace("{item}", item.ItemTypeId.ToString()));
         }
 
-        [PluginEvent(ServerEventType.PlayerThrowItem)]
-        void OnThrowItem(Player player, ItemBase item, Rigidbody rb)
+        public override void OnPlayerThrewItem(PlayerThrewItemEventArgs ev)
         {
-            if (player != null && config.XpOnItemThrown.ContainsKey(item.ItemTypeId))
-                RewardXp(player, config.XpOnItemThrown[item.ItemTypeId], translation.RewardXpItemThrown.Replace("{item}", item.ItemTypeId.ToString()));
+            if (ev.Player != null && config.XpOnItemThrown.ContainsKey(ev.Pickup.Type))
+                RewardXp(ev.Player, config.XpOnItemThrown[ev.Pickup.Type], translation.RewardXpItemThrown.Replace("{item}", ev.Pickup.Type.ToString()));
         }
 
-        [PluginEvent(ServerEventType.PlayerDamage)]
+        public override void OnPlayerHurt(PlayerHurtEventArgs ev)
+        {
+            OnPlayerDamage(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDamage(Player victim, Player attacker, DamageHandlerBase damage)
         {
             if (victim != null && attacker != null && player_xp.ContainsKey(victim.PlayerId) && player_xp.ContainsKey(attacker.PlayerId))
@@ -286,21 +303,24 @@ namespace TheRiptide
                         RewardXp(attacker, config.XpOn500Damage, translation.RewardXp500Damage);
                     else if (t.damage < 2500 && 2500 < new_damage)
                         RewardXp(attacker, config.XpOn2500Damage, translation.RewardXp2500Damage);
-                    else if(t.damage < 10000 && 10000 < new_damage)
+                    else if (t.damage < 10000 && 10000 < new_damage)
                         RewardXp(attacker, config.XpOn10000Damage, translation.RewardXp10000Damage);
                     t.damage = new_damage;
                 }
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerDeath)]
+        public override void OnPlayerDeath(PlayerDeathEventArgs ev)
+        {
+            OnPlayerDeath(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDeath(Player victim, Player killer, DamageHandlerBase damage)
         {
             if (victim != null && killer != null && player_xp.ContainsKey(victim.PlayerId) && player_xp.ContainsKey(killer.PlayerId) && victim != killer)
             {
                 RewardXp(killer, config.XpPerKill, translation.RewardXpKill);
                 player_tracking[killer.PlayerId].killstreak++;
-                switch(player_tracking[killer.PlayerId].killstreak)
+                switch (player_tracking[killer.PlayerId].killstreak)
                 {
                     case 5:
                         RewardXp(killer, config.XpOn5Killstreak, translation.RewardXp5Killstreak);
@@ -346,7 +366,7 @@ namespace TheRiptide
 
         public void SaveExperiences()
         {
-            foreach (Player p in Player.GetPlayers())
+            foreach (Player p in Player.List)
             {
                 if (player_xp.ContainsKey(p.PlayerId))
                 {

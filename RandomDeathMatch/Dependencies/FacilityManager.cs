@@ -1,14 +1,16 @@
 ﻿using Interactables.Interobjects;
 using Interactables.Interobjects.DoorUtils;
+using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ElevatorDoor = Interactables.Interobjects.ElevatorDoor;
 
 namespace TheRiptide
 {
@@ -70,7 +72,7 @@ namespace TheRiptide
                 }
                 catch(Exception ex)
                 {
-                    Log.Error(ex.ToString());
+                    Logger.Error(ex.ToString());
                 }
             });
         }
@@ -317,7 +319,7 @@ namespace TheRiptide
 
         private static Direction RoomDirection(RoomIdentifier from, RoomIdentifier to)
         {
-            Vector3 difference = from.ApiRoom.Position - to.ApiRoom.Position;
+            Vector3 difference = from.transform.position - to.transform.position;
             Vector3 abs = new Vector3(Math.Abs(difference.x), Math.Abs(difference.y), Math.Abs(difference.z));
             if (abs.x > abs.y && abs.x > abs.z)
             {

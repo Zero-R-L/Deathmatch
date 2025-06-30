@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.33214.272
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Deathmatch", "RandomDeathMatch\Deathmatch.csproj", "{D9CEB1A1-61A3-48EA-B85C-96F78DE67169}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeathmatchEvent", "DeathmatchEvent\DeathmatchEvent.csproj", "{D78863CE-B3F6-4A5A-B444-94C226CFF697}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{D9CEB1A1-61A3-48EA-B85C-96F78DE67169}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9CEB1A1-61A3-48EA-B85C-96F78DE67169}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9CEB1A1-61A3-48EA-B85C-96F78DE67169}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D78863CE-B3F6-4A5A-B444-94C226CFF697}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D78863CE-B3F6-4A5A-B444-94C226CFF697}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D78863CE-B3F6-4A5A-B444-94C226CFF697}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D78863CE-B3F6-4A5A-B444-94C226CFF697}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

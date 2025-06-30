@@ -1,7 +1,7 @@
 ﻿using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +12,8 @@ using CommandSystem;
 using System.ComponentModel;
 using static TheRiptide.Translation;
 using RemoteAdmin;
+using LabApi.Events.CustomHandlers;
+using LabApi.Events.Arguments.PlayerEvents;
 
 namespace TheRiptide
 {
@@ -85,7 +87,7 @@ namespace TheRiptide
         public string Color { get; set; }
     }
 
-    public class Ranks
+    public class Ranks : CustomEventsHandler
     {
         private const float Rating = 1500.0f;
         private const float RatingDeviation = 350.0f;
@@ -115,7 +117,10 @@ namespace TheRiptide
             player_matches.Clear();
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!player.DoNotTrack)
@@ -137,7 +142,10 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerDeath)]
+        public override void OnPlayerDeath(PlayerDeathEventArgs ev)
+        {
+            OnPlayerDeath(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDeath(Player victim, Player killer, DamageHandlerBase damage)
         {
             if (killer != null && victim != killer && player_glikco.ContainsKey(victim.UserId) && player_glikco.ContainsKey(killer.UserId))
@@ -216,7 +224,7 @@ namespace TheRiptide
                         }
                         catch (Exception ex)
                         {
-                            Log.Error("glicko error: " + ex.ToString());
+                            Logger.Error("glicko error: " + ex.ToString());
                         }
                     }
                     Database.Singleton.SaveRank(rank);
@@ -228,7 +236,7 @@ namespace TheRiptide
                 }
                 catch(System.Exception ex)
                 {
-                    Log.Error("rank save error: " + ex.ToString());
+                    Logger.Error("rank save error: " + ex.ToString());
                 }
             }
         }
@@ -331,7 +339,7 @@ namespace TheRiptide
             RankInfo info = GetInfo(rank);
             if (!BadgeOverride.ColorNameToHex.ContainsKey(info.Color))
             {
-                Log.Error("invalid rank color: " + info.Color);
+                Logger.Error("invalid rank color: " + info.Color);
                 return;
             }
             string rank_hint = translation.RankMsg.Replace("{color}", BadgeOverride.ColorNameToHex[info.Color]).Replace("{rank}", config.BadgeFormat.Replace("{name}", info.Name));

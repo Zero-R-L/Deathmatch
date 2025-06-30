@@ -1,9 +1,9 @@
 ﻿using InventorySystem.Items;
 using InventorySystem.Items.Firearms;
 using InventorySystem.Items.Firearms.Attachments;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.CustomHandlers;
+using LabApi.Features.Wrappers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace TheRiptide
         public List<AttachmentName> BlackList { get; set; } = new List<AttachmentName>();
     }
 
-    class AttachmentBlacklist
+    class AttachmentBlacklist : CustomEventsHandler
     {
         public static AttachmentBlacklist Singleton { get; private set; }
         private Dictionary<ItemType, uint> BannedWeaponCodes = new Dictionary<ItemType,  uint>();
@@ -39,7 +39,6 @@ namespace TheRiptide
             this.config = config;
         }
 
-        [PluginEvent(ServerEventType.RoundStart)]
         void OnRoundStart()
         {
             //foreach(RoomIdentifier room in RoomIdentifier.AllRoomIdentifiers)
@@ -50,18 +49,16 @@ namespace TheRiptide
             //}
         }
 
-        [PluginEvent(ServerEventType.PlayerChangeItem)]
-        void OnPlayerChangeItem(Player player, ushort old_item, ushort new_item)
+        public override void OnPlayerChangedItem(PlayerChangedItemEventArgs ev)
         {
-            if(player.ReferenceHub.inventory.UserInventory.Items.ContainsKey(new_item))
-            {
-                ItemBase item = player.ReferenceHub.inventory.UserInventory.Items[new_item];
-                if(item is Firearm firearm)
-                    RemoveBanned(player, firearm);
-            }
+            if (ev.NewItem is FirearmItem firearmItem)
+                RemoveBanned(ev.Player, firearmItem.Base);
         }
 
-        [PluginEvent(ServerEventType.PlayerShotWeapon)]
+        public override void OnPlayerShotWeapon(PlayerShotWeaponEventArgs ev)
+        {
+            OnShotWeapon(ev.Player, ev.FirearmItem.Base);
+        }
         void OnShotWeapon(Player player, Firearm firearm)
         {
             RemoveBanned(player, firearm);

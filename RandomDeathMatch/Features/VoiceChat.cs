@@ -1,7 +1,7 @@
 ﻿using PlayerRoles;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using PlayerRoles.FirstPersonControl;
 using System.Collections.Generic;
 using HarmonyLib;
@@ -14,6 +14,8 @@ using VoiceChat;
 using PlayerRoles.Voice;
 using static TheRiptide.Translation;
 using System.Linq;
+using LabApi.Events.CustomHandlers;
+using LabApi.Events.Arguments.PlayerEvents;
 
 namespace TheRiptide
 {
@@ -22,7 +24,7 @@ namespace TheRiptide
         public bool IsEnabled { get; set; } = true;
     }
 
-    public class VoiceChat
+    public class VoiceChat : CustomEventsHandler
     {
         public static VoiceChat Singleton { get; private set; }
         public VoiceChatConfig config;
@@ -49,7 +51,10 @@ namespace TheRiptide
             force_mode = false;
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!player_mode.ContainsKey(player.PlayerId))
@@ -58,8 +63,11 @@ namespace TheRiptide
                 player_mode[player.PlayerId] = TalkMode.GlobalTalkGlobalReceive;
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
-        void onPlayerLeft(Player player)
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
+        void OnPlayerLeft(Player player)
         {
             if (player_mode.ContainsKey(player.PlayerId))
                 player_mode.Remove(player.PlayerId);
@@ -75,14 +83,14 @@ namespace TheRiptide
         private bool IsGlobalTalk(int id)
         {
             if (player_mode.ContainsKey(id))
-                return player_mode[id] == TalkMode.GlobalTalkGlobalReceive ? true : false;
+                return player_mode[id] == TalkMode.GlobalTalkGlobalReceive;
             return false;
         }
 
         private bool IsGlobalReceive(int id)
         {
             if (player_mode.ContainsKey(id))
-                return player_mode[id] == TalkMode.ProximityTalkProximityReceive ? false : true;
+                return player_mode[id] != TalkMode.ProximityTalkProximityReceive;
             return false;
         }
 
@@ -155,7 +163,7 @@ namespace TheRiptide
             }
             catch(System.Exception ex)
             {
-                Log.Error("noclip error: " + ex.ToString());
+                Logger.Error("noclip error: " + ex.ToString());
             }
             return false;
         }

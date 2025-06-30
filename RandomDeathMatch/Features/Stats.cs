@@ -1,8 +1,8 @@
 ﻿using InventorySystem.Items.Firearms;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
@@ -10,10 +10,13 @@ using UnityEngine;
 using CustomPlayerEffects;
 using PlayerRoles;
 using static TheRiptide.Translation;
+using LabApi.Events.CustomHandlers;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Features.Wrappers;
 
 namespace TheRiptide
 {
-    class Statistics
+    class Statistics : CustomEventsHandler
     {
         public class LifeStats
         {
@@ -72,13 +75,16 @@ namespace TheRiptide
                 }
                 catch(Exception ex)
                 {
-                    Log.Error("on damage error: " + ex.ToString());
+                    Logger.Error("on damage error: " + ex.ToString());
                 }
             });
             PlayerStats.OnAnyPlayerDamaged += OnPlayerDamaged;
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             int id = player.PlayerId;
@@ -89,7 +95,10 @@ namespace TheRiptide
                 attacker_stats.Add(id, new Dictionary<int, LifeStats>());
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             int id = player.PlayerId;
@@ -100,7 +109,10 @@ namespace TheRiptide
                 attacker_stats.Remove(id);
         }
 
-        [PluginEvent(ServerEventType.PlayerDeath)]
+        public override void OnPlayerDeath(PlayerDeathEventArgs ev)
+        {
+            OnPlayerDeath(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDeath(Player victim, Player killer, DamageHandlerBase damage)
         {
             if (killer != null && killer.IsAlive && player_stats.ContainsKey(killer.PlayerId))
@@ -133,18 +145,18 @@ namespace TheRiptide
                     }
                     catch(Exception ex)
                     {
-                        Log.Error("Error could not get Ahp of player: " + ex.ToString());
+                        Logger.Error("Error could not get Ahp of player: " + ex.ToString());
                     }
 
                     DamageReduction damage_reduction = null;
-                    if (killer.EffectsManager.TryGetEffect(out damage_reduction))
+                    if (killer.ReferenceHub.playerEffectsController.TryGetEffect(out damage_reduction))
                     {
                         if (damage_reduction.IsEnabled && damage_reduction.Intensity != 0)
                             hint += translation.DeathMsgDamageReduction.Replace("{reduction}", (damage_reduction.Intensity / 2.0f).ToString("0.0"));
                     }
 
                     BodyshotReduction bodyshot_reduction = null;
-                    if(killer.EffectsManager.TryGetEffect(out bodyshot_reduction))
+                    if(killer.ReferenceHub.playerEffectsController.TryGetEffect(out bodyshot_reduction))
                     {
                         if(bodyshot_reduction.IsEnabled && bodyshot_reduction.Intensity != 0)
                         {
@@ -187,17 +199,20 @@ namespace TheRiptide
                                 Replace("{other_hits}", attacker_life_stats.other_hits.ToString());
                     }
 
-                    victim.ReceiveHint(hint, 7.0f);
+                    victim.SendHint(hint, 7.0f);
                 }
 
                 attacker_stats[victim.PlayerId].Clear();
-                foreach (var p in Player.GetPlayers())
+                foreach (var p in Player.List)
                     if (attacker_stats.ContainsKey(p.PlayerId))
                         attacker_stats[p.PlayerId].Remove(victim.PlayerId);
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerDamage)]
+        public override void OnPlayerHurt(PlayerHurtEventArgs ev)
+        {
+            OnPlayerDamage(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDamage(Player victim, Player attacker, DamageHandlerBase damage)
         {
             bool valid_attacker = attacker != null && player_stats.ContainsKey(attacker.PlayerId);
@@ -254,10 +269,9 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerShotWeapon)]
-        void OnPlayerShotWeapon(Player player, Firearm firearm)
+        public override void OnPlayerShotWeapon(PlayerShotWeaponEventArgs ev)
         {
-            player_stats[player.PlayerId].shots++;
+            player_stats[ev.Player.PlayerId].shots++;
         }
 
         public static Stats GetStats(Player player)
@@ -306,7 +320,7 @@ namespace TheRiptide
             float most_score = 0.0f;
             string best_player_name = "N/A";
 
-            foreach (Player player in Player.GetPlayers())
+            foreach (Player player in Player.List)
             {
                 Stats stats = player_stats[player.PlayerId];
                 if (stats.highest_killstreak > highest_killstreak)
@@ -339,14 +353,14 @@ namespace TheRiptide
             string most_kills_msg = translation.HighestKills.Replace("{name}", most_kills_name).Replace("{kills}", most_kills.ToString()); 
             string highest_score_msg = translation.HighestScore.Replace("{name}", best_player_name).Replace("{score}", most_score.ToString());
 
-            foreach (Player player in Player.GetPlayers())
+            foreach (Player player in Player.List)
                 BroadcastOverride.SetEvenLineSizes(player, 5);
 
             BroadcastOverride.BroadcastLine(1, 300, BroadcastPriority.Highest, highest_killstreak_msg);
             BroadcastOverride.BroadcastLine(2, 300, BroadcastPriority.Highest, most_kills_msg);
             BroadcastOverride.BroadcastLine(3, 300, BroadcastPriority.Highest, highest_score_msg);
 
-            foreach (Player player in Player.GetPlayers())
+            foreach (Player player in Player.List)
                 DisplayStats(player, 4);
             BroadcastOverride.UpdateAllDirty();
         }

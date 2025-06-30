@@ -1,6 +1,6 @@
 ﻿using CommandSystem;
 using MapGeneration;
-using PluginAPI.Core;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -281,7 +281,7 @@ namespace TheRiptide
             Player player;
             if (Player.TryGet(sender, out player))
             {
-                Vector3 pos = player.Room.transform.InverseTransformPoint(player.Position);
+                Vector3 pos = player.Room.Transform.InverseTransformPoint(player.Position);
                 ServerConsole.AddLog(pos.ToPreciseString(), ConsoleColor.Cyan);
                 response = pos.ToPreciseString() + " | " + player.Room.Zone.ToString() + " | " + player.Room.Name.ToString() + " | " + player.Room.Shape.ToString();
                 return true;

@@ -1,11 +1,13 @@
-﻿using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+﻿using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.CustomHandlers;
+
+
+
 using System.Collections.Generic;
 
 namespace TheRiptide
 {
-    class BadgeOverride
+    class BadgeOverride : CustomEventsHandler
     {
         public static readonly Dictionary<string, string> ColorNameToHex = new Dictionary<string, string>
         {
@@ -68,7 +70,10 @@ namespace TheRiptide
             this.slots = slots;
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             int id = player.PlayerId;
@@ -79,7 +84,10 @@ namespace TheRiptide
                 player_badges.Add(id, badge);
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             int id = player.PlayerId;

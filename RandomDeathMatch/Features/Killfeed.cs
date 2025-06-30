@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.CustomHandlers;
 using MEC;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using static TheRiptide.Translation;
 
 namespace TheRiptide
 {
-    class Killfeeds
+    class Killfeeds : CustomEventsHandler
     {
         class Killfeed
         {
@@ -132,7 +134,10 @@ namespace TheRiptide
                 broadcast_layout.Add(killfeed_line_size);
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!player_killfeed.ContainsKey(player.PlayerId))
@@ -140,7 +145,10 @@ namespace TheRiptide
             SetBroadcastKillfeedLayout(player);
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             if (player_killfeed.ContainsKey(player.PlayerId))
@@ -255,7 +263,7 @@ namespace TheRiptide
                     kill_msg = translation.SelfKill.Replace("{victim}", victim_name);
             }
 
-            foreach (Player player in Player.GetPlayers())
+            foreach (Player player in Player.List)
             {
                 if (player_killfeed.ContainsKey(player.PlayerId))
                 {
@@ -277,7 +285,7 @@ namespace TheRiptide
 
         public static void UpdateAllDirty()
         {
-            foreach (Player player in Player.GetPlayers())
+            foreach (Player player in Player.List)
                 UpdateIfDirty(player);
         }
     }

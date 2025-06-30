@@ -1,15 +1,19 @@
 ﻿using InventorySystem.Items;
 using InventorySystem.Items.ThrowableProjectiles;
 using InventorySystem.Items.Usables;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.CustomHandlers;
+using LabApi.Features.Wrappers;
 using MEC;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UsableItem = InventorySystem.Items.Usables.UsableItem;
 
 namespace TheRiptide
 {
@@ -50,7 +54,7 @@ namespace TheRiptide
         }
     }
 
-    public class InventoryMenu
+    public class InventoryMenu : CustomEventsHandler
     {
         public static InventoryMenu Singleton { get; private set; }
 
@@ -62,21 +66,33 @@ namespace TheRiptide
             Singleton = this;
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!player_menu.ContainsKey(player.PlayerId))
                 player_menu.Add(player.PlayerId, 0);
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             if (player_menu.ContainsKey(player.PlayerId))
                 player_menu.Remove(player.PlayerId);
         }
 
-        [PluginEvent(ServerEventType.PlayerDropItem)]
+        public override void OnPlayerDroppingItem(PlayerDroppingItemEventArgs ev)
+        {
+            if (!OnPlayerDropitem(ev.Player, ev.Item.Base))
+            {
+                ev.IsAllowed = false;
+            }
+        }
         bool OnPlayerDropitem(Player player, ItemBase item)
         {
             if (!player_menu.ContainsKey(player.PlayerId))
@@ -90,7 +106,13 @@ namespace TheRiptide
             return allow_drop;
         }
 
-        [PluginEvent(ServerEventType.PlayerUseItem)]
+        public override void OnPlayerUsingItem(PlayerUsingItemEventArgs ev)
+        {
+            if (!OnPlayerUseItem(ev.Player, ev.UsableItem.Base))
+            {
+                ev.IsAllowed = false;
+            }
+        }
         bool OnPlayerUseItem(Player player, UsableItem item)
         {
             if (!player_menu.ContainsKey(player.PlayerId))
@@ -100,27 +122,26 @@ namespace TheRiptide
             return true;
         }
 
-        [PluginEvent(ServerEventType.PlayerThrowItem)]
-        bool OnThrowItem(Player player, ItemBase item, Rigidbody rb)
+        public override void OnPlayerThrowingItem(PlayerThrowingItemEventArgs ev)
         {
-            if (!player_menu.ContainsKey(player.PlayerId))
-                return true;
-            if (player_menu[player.PlayerId] != 0)
-                return false;
-            return true;
+            if (!player_menu.ContainsKey(ev.Player.PlayerId))
+                return;
+            if (player_menu[ev.Player.PlayerId] != 0)
+                ev.IsAllowed = false;
         }
 
-        [PluginEvent(ServerEventType.PlayerThrowProjectile)]
-        public bool OnPlayerThrowProjectile(Player player, ThrowableItem item, ThrowableItem.ProjectileSettings projectileSettings, bool fullForce)
-        {//todo fix
-            if (!player_menu.ContainsKey(player.PlayerId))
-                return true;
-            if (player_menu[player.PlayerId] != 0)
-                return false;
-            return true;
+        public override void OnPlayerThrowingProjectile(PlayerThrowingProjectileEventArgs ev)
+        {
+            //todo fix
+            if (!player_menu.ContainsKey(ev.Player.PlayerId))
+            if (player_menu[ev.Player.PlayerId] != 0)
+                ev.IsAllowed = false;
         }
 
-        [PluginEvent(ServerEventType.PlayerDeath)]
+        public override void OnPlayerDeath(PlayerDeathEventArgs ev)
+        {
+            OnPlayerDeath(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDeath(Player target, Player killer, DamageHandlerBase damage)
         {
             if (!player_menu.ContainsKey(target.PlayerId))

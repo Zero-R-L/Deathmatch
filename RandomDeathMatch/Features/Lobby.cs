@@ -1,13 +1,17 @@
 ﻿using AdminToys;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Arguments.ServerEvents;
+using LabApi.Events.CustomHandlers;
+using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
 using Mirror;
 using PlayerRoles;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
-using PluginAPI.Events;
+
+
+
+
 using Respawning;
 using System;
 using System.Collections.Generic;
@@ -15,6 +19,8 @@ using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
 using static TheRiptide.Translation;
+using LightSourceToy = AdminToys.LightSourceToy;
+using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 
 namespace TheRiptide
 {
@@ -30,7 +36,7 @@ namespace TheRiptide
         public float SpawnProtection { get; set; } = 3.0f;
     }
 
-    class Lobby
+    class Lobby : CustomEventsHandler
     {
         public static Lobby Singleton { get; private set; }
 
@@ -72,10 +78,13 @@ namespace TheRiptide
             round_started = false;
 
             //foreach (var c in NetworkManager.singleton.spawnPrefabs)
-            //    Log.Info(c.name);
+            //    Logger.Info(c.name);
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!player_spawns.ContainsKey(player.PlayerId))
@@ -95,19 +104,22 @@ namespace TheRiptide
                 MEC.Timing.CallDelayed(1.0f, () => { if (!player.IsAlive) { RespawnPlayer(player); } });
             }
 
-            if(Player.Count == 1)
+            if (Player.Count == 1)
             {
                 DmRound.GameStarted = false;
             }
             else if (Player.Count == 2)
             {
-                foreach (var p in Player.GetPlayers())
+                foreach (var p in Player.List)
                     if (p.IsAlive)
-                        p.EffectsManager.DisableAllEffects();
+                        p.ReferenceHub.playerEffectsController.DisableAllEffects();
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             if (player_spawns.ContainsKey(player.PlayerId))
@@ -121,13 +133,16 @@ namespace TheRiptide
             if(Player.Count == 2)
             {
                 DmRound.GameStarted = false;
-                foreach (var p in Player.GetPlayers())
+                foreach (var p in Player.List)
                     if (p.IsAlive)
                         ApplyGameNotStartedEffects(player);
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerDeath)]
+        public override void OnPlayerDeath(PlayerDeathEventArgs ev)
+        {
+            OnPlayerDeath(ev.Player, ev.Attacker, ev.DamageHandler);
+        }
         void OnPlayerDeath(Player target, Player killer, DamageHandlerBase damage)
         {
             if (target == null)
@@ -144,7 +159,10 @@ namespace TheRiptide
             BroadcastOverride.UpdateAllDirty();
         }
 
-        [PluginEvent(ServerEventType.PlayerChangeSpectator)]
+        public override void OnPlayerChangedSpectator(PlayerChangedSpectatorEventArgs ev)
+        {
+            OnPlayerChangeSpectator(ev.Player, ev.OldTarget, ev.NewTarget);
+        }
         void OnPlayerChangeSpectator(Player player, Player old_target, Player new_target)
         {
             if (player == null || !player_spawns.ContainsKey(player.PlayerId))
@@ -161,7 +179,7 @@ namespace TheRiptide
             }
             else
             {
-                if (new_target == null || new_target.PlayerId == Server.Instance.PlayerId)
+                if (new_target == null || new_target.PlayerId == Server.Host.PlayerId)
                 {
                     spawn.in_spectator_mode = false;
                     RespawnPlayer(player);
@@ -169,7 +187,13 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerChangeRole)]
+        public override void OnPlayerChangingRole(PlayerChangingRoleEventArgs ev)
+        {
+            if (!OnPlayerChangeRole(ev.Player, ev.OldRole, ev.NewRole, ev.ChangeReason))
+            {
+                ev.IsAllowed = false;
+            }
+        }
         bool OnPlayerChangeRole(Player player, PlayerRoleBase old_role, RoleTypeId new_role, RoleChangeReason reason)
         {
             if (player == null || !player_spawns.ContainsKey(player.PlayerId))
@@ -187,7 +211,10 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerSpawn)]
+        public override void OnPlayerSpawned(PlayerSpawnedEventArgs ev)
+        {
+            OnPlayerSpawn(ev.Player, ev.Role.RoleTypeId);
+        }
         void OnPlayerSpawn(Player player, RoleTypeId role)
         {
             if (!player_spawns.ContainsKey(player.PlayerId))
@@ -212,12 +239,12 @@ namespace TheRiptide
                     {
                         if (player == null || !player_spawns.ContainsKey(player.PlayerId))
                             return;
-                        if (Player.GetPlayers().Count == 1)
+                        if (Extensions.GetPlayerList().Count() == 1)
                         {
                             BroadcastOverride.BroadcastLines(player, 1, 1500.0f, BroadcastPriority.Low, translation.WaitingForPlayers);
                             BroadcastOverride.UpdateIfDirty(player);
                         }
-                        else if (Player.GetPlayers().Count >= 2 && !DmRound.GameStarted)
+                        else if (Extensions.GetPlayerList().Count() >= 2 && !DmRound.GameStarted)
                         {
                             DmRound.GameStarted = true;
                             BroadcastOverride.ClearLines(BroadcastPriority.Low);
@@ -236,16 +263,19 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.TeamRespawn)]
-        bool OnRespawn(TeamRespawnEvent _)
+        public override void OnServerWaveTeamSelecting(WaveTeamSelectingEventArgs ev)
         {
-            return false;
+            ev.IsAllowed = false;
         }
 
-        [PluginEvent(ServerEventType.PlayerEscape)]
-        bool OnPlayerEscape(Player player, RoleTypeId role)
+        public override void OnServerWaveRespawning(WaveRespawningEventArgs ev)
         {
-            return false;
+            ev.IsAllowed = false;
+        }
+
+        public override void OnPlayerEscaping(PlayerEscapingEventArgs ev)
+        {
+            ev.IsAllowed = false;
         }
 
         public Spawn GetSpawn(Player player)
@@ -277,18 +307,25 @@ namespace TheRiptide
                         Timing.KillCoroutines(spawn.teleport_handle);
                         spawn.teleport_handle = Timing.CallDelayed(3.0f, () =>
                         {
-                            if (Player.GetPlayers().Count == 1)
+                            try
                             {
-                                BroadcastOverride.BroadcastLines(player, 1, 1500.0f, BroadcastPriority.Low, translation.WaitingForPlayers);
-                                BroadcastOverride.UpdateIfDirty(player);
+                                if (Extensions.GetPlayerList().Count() == 1)
+                                {
+                                    BroadcastOverride.BroadcastLines(player, 1, 1500.0f, BroadcastPriority.Low, translation.WaitingForPlayers);
+                                    BroadcastOverride.UpdateIfDirty(player);
+                                }
+                                else if (Extensions.GetPlayerList().Count() >= 2 && !DmRound.GameStarted)
+                                {
+                                    DmRound.GameStarted = true;
+                                    BroadcastOverride.ClearLines(BroadcastPriority.Low);
+                                    BroadcastOverride.UpdateAllDirty();
+                                }
+                                TeleportRandom(player);
                             }
-                            else if (Player.GetPlayers().Count >= 2 && !DmRound.GameStarted)
+                            catch (Exception e)
                             {
-                                DmRound.GameStarted = true;
-                                BroadcastOverride.ClearLines(BroadcastPriority.Low);
-                                BroadcastOverride.UpdateAllDirty();
+                                Logger.Error(e);
                             }
-                            TeleportRandom(player);
                         });
                     }
                     else
@@ -296,12 +333,12 @@ namespace TheRiptide
                 }
                 else
                 {
-                    if (Player.GetPlayers().Count == 1)
+                    if (Extensions.GetPlayerList().Count() == 1)
                     {
                         BroadcastOverride.BroadcastLines(player, 1, 1500.0f, BroadcastPriority.Low, translation.WaitingForPlayers);
                         BroadcastOverride.UpdateIfDirty(player);
                     }
-                    else if (Player.GetPlayers().Count >= 2 && !DmRound.GameStarted)
+                    else if (Extensions.GetPlayerList().Count() >= 2 && !DmRound.GameStarted)
                     {
                         DmRound.GameStarted = true;
                         BroadcastOverride.ClearLines(BroadcastPriority.Low);
@@ -357,7 +394,7 @@ namespace TheRiptide
             NetworkServer.Spawn(obj);
         }
 
-        static Vector3 offset = new Vector3(42.656f, 1007.25f, -47.25f);
+        static Vector3 offset = new Vector3(42.656f, 400f, -47.25f);
 
         private void BuildSpawn(int x, int y)
         {
@@ -390,13 +427,13 @@ namespace TheRiptide
             {
                 if (player == null)
                 {
-                    Log.Error("could not teleport player because player was null");
+                    Logger.Error("could not teleport player because player was null");
                     return;
                 }
 
                 if (!player_spawns.ContainsKey(player.PlayerId))
                 {
-                    Log.Error("could not teleport player: " + player.Nickname + " because they where never added to players");
+                    Logger.Error("could not teleport player: " + player.Nickname + " because they where never added to players");
                     return;
                 }
 
@@ -411,12 +448,12 @@ namespace TheRiptide
                         occupied_positions.Add(false);
 
                     HashSet<RoomIdentifier> occupied_rooms = new HashSet<RoomIdentifier>();
-                    foreach (Player p in Player.GetPlayers())
+                    foreach (Player p in Player.List)
                     {
                         if (Rooms.ValidPlayerInRoom(p))
                         {
                             if (p.Room.Zone != FacilityZone.Surface)
-                                occupied_rooms.Add(p.Room);
+                                occupied_rooms.Add(p.Room.Base);
                             else
                             {
                                 int i = 1;
@@ -477,28 +514,29 @@ namespace TheRiptide
                             ApplyGameNotStartedEffects(player);
                         spawn.in_spawn = false;
                         Tracking.Singleton.PlayerSpawn(player);
-                        player.EffectsManager.ChangeState<CustomPlayerEffects.SpawnProtected>(1, config.SpawnProtection);
+                        player.ReferenceHub.playerEffectsController.ChangeState<CustomPlayerEffects.SpawnProtected>(1, config.SpawnProtection);
                     }
                     else
                     {
-                        Log.Error("could not teleport player: " + player.Nickname + " because there was no opened rooms");
+                        Logger.Error("could not teleport player: " + player.Nickname + " because there was no opened rooms");
                     }
                 }
                 else
                 {
-                    Log.Error("could not teleport player: " + player.Nickname + " because they are not in spawn");
+                    Logger.Error("could not teleport player: " + player.Nickname + " because they are not in spawn");
                 }
             }
             catch (Exception ex)
             {
-                Log.Error("teleport error: " + ex.ToString());
+                Logger.Error("teleport error: " + ex.ToString());
             }
         }
 
         public static void ApplyGameNotStartedEffects(Player player)
         {
-            player.EffectsManager.ChangeState<CustomPlayerEffects.MovementBoost>(255, 0);
-            player.EffectsManager.ChangeState<CustomPlayerEffects.DamageReduction>(255, 0);
+            player.ReferenceHub.playerEffectsController.ChangeState<CustomPlayerEffects.Scp207>(255, 0);
+            player.ReferenceHub.playerEffectsController.ChangeState<CustomPlayerEffects.MovementBoost>(255, 0);
+            player.ReferenceHub.playerEffectsController.ChangeState<CustomPlayerEffects.DamageReduction>(255, 0);
         }
     }
 }

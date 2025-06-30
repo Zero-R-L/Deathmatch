@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteDB;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using MEC;
 using PlayerRoles;
 using UnityEngine;
@@ -198,7 +199,7 @@ namespace TheRiptide
 
         public void Load(string config_path)
         {
-            db = new LiteDatabase($"filename={config_path.Replace("config.yml", "") + "Deathmatch.db"};auto-rebuild=true");
+            db = new LiteDatabase($"filename={Path.Combine(config_path, "Deathmatch.db")};auto-rebuild=true");
         }
 
         public void UnLoad()
@@ -330,7 +331,7 @@ namespace TheRiptide
                     }
                     catch (System.Exception ex)
                     {
-                        Log.Error("database rank error: " + ex.ToString());
+                        Logger.Error("database rank error: " + ex.ToString());
                     }
                 });
             });
@@ -369,7 +370,7 @@ namespace TheRiptide
                     }
                     catch(System.Exception ex)
                     {
-                        Log.Error("database experience error: " + ex.ToString());
+                        Logger.Error("database experience error: " + ex.ToString());
                     }
                 });
             });
@@ -528,7 +529,7 @@ namespace TheRiptide
                 }
                 catch (System.Exception ex)
                 {
-                    Log.Error("Database error: " + ex.ToString());
+                    Logger.Error("Database error: " + ex.ToString());
                 }
             }).Start();
         }
@@ -546,7 +547,7 @@ namespace TheRiptide
                 }
                 catch (System.Exception ex)
                 {
-                    Log.Error("Database error: " + ex.ToString());
+                    Logger.Error("Database error: " + ex.ToString());
                 }
             }).Start();
         }
@@ -566,7 +567,7 @@ namespace TheRiptide
                     }
                     catch (System.Exception ex)
                     {
-                        Log.Error("Database error: " + ex.ToString());
+                        Logger.Error("Database error: " + ex.ToString());
                     }
                 }).Start();
             });

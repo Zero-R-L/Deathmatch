@@ -8,9 +8,9 @@ using Mirror;
 using MEC;
 using PlayerRoles;
 using PlayerStatsSystem;
-using PluginAPI.Core;
-using PluginAPI.Core.Attributes;
-using PluginAPI.Enums;
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +21,8 @@ using Unity.Mathematics;
 using static TheRiptide.Utility;
 using static TheRiptide.Translation;
 using Interactables.Interobjects.DoorUtils;
+using LabApi.Events.CustomHandlers;
+using LabApi.Events.Arguments.PlayerEvents;
 
 namespace TheRiptide
 {
@@ -48,7 +50,7 @@ namespace TheRiptide
         };
     }
 
-    public class Loadouts
+    public class Loadouts : CustomEventsHandler
     {
         public static Loadouts Singleton { get; private set; }
 
@@ -80,21 +82,29 @@ namespace TheRiptide
             this.config = config;
         }
 
-        [PluginEvent(ServerEventType.RoundStart)]
+        public override void OnServerRoundStarted()
+        {
+            OnRoundStart();
+        }
         void OnRoundStart()
         {
-            Scp330Interobject scp330 = RoomIdentifier.AllRoomIdentifiers.Where((r => r.Name == RoomName.Lcz330)).First().GetComponentInChildren<Scp330Interobject>();
-            NetworkServer.UnSpawn(scp330.gameObject);
+            NetworkServer.UnSpawn(UnityEngine.Object.FindAnyObjectByType<Scp330Interobject>().gameObject);
         }
 
-        [PluginEvent(ServerEventType.PlayerJoined)]
+        public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            OnPlayerJoined(ev.Player);
+        }
         void OnPlayerJoined(Player player)
         {
             if (!player_loadouts.ContainsKey(player.PlayerId))
                 player_loadouts.Add(player.PlayerId, new Loadout());
         }
 
-        [PluginEvent(ServerEventType.PlayerLeft)]
+        public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            OnPlayerLeft(ev.Player);
+        }
         void OnPlayerLeft(Player player)
         {
             if (player_loadouts.ContainsKey(player.PlayerId))
@@ -105,7 +115,13 @@ namespace TheRiptide
             }
         }
 
-        [PluginEvent(ServerEventType.PlayerDropItem)]
+        public override void OnPlayerDroppingItem(PlayerDroppingItemEventArgs ev)
+        {
+            if (!OnPlayerDropitem(ev.Player, ev.Item.Base))
+            {
+                ev.IsAllowed = false;
+            }
+        }
         bool OnPlayerDropitem(Player player, ItemBase item)
         {
             bool drop_allowed = false;
@@ -167,28 +183,40 @@ namespace TheRiptide
             return drop_allowed;
         }
 
-        [PluginEvent(ServerEventType.PlayerDropAmmo)]
-        bool OnPlayerDropAmmo(Player player, ItemType ammo, int amount)
+        public override void OnPlayerDroppingAmmo(PlayerDroppingAmmoEventArgs ev)
         {
-            return false;
+            ev.IsAllowed = false;
         }
 
-        [PluginEvent(ServerEventType.PlayerShotWeapon)]
+        public override void OnPlayerShotWeapon(PlayerShotWeaponEventArgs ev)
+        {
+            OnPlayerShotWeapon(ev.Player, ev.FirearmItem.Base);
+        }
         void OnPlayerShotWeapon(Player player, Firearm firearm)
         {
+            if (!DmRound.GameStarted) return;
             player_loadouts[player.PlayerId].locked = true;
             RemoveItem(player, ItemType.KeycardO5);
         }
 
-        [PluginEvent(ServerEventType.PlayerUsedItem)]
+        public override void OnPlayerUsingItem(PlayerUsingItemEventArgs ev)
+        {
+            OnPlayerUsedItem(ev.Player, ev.UsableItem.Base);
+        }
         void OnPlayerUsedItem(Player player, ItemBase item)
         {
             player_loadouts[player.PlayerId].locked = true;
             RemoveItem(player, ItemType.KeycardO5);
         }
 
-        [PluginEvent(ServerEventType.PlayerInteractDoor)]
-        bool OnPlayerInteractDoor(Player player, DoorVariant door, bool can_open)
+        public override void OnPlayerInteractingDoor(PlayerInteractingDoorEventArgs ev)
+        {
+            if (!OnPlayerInteractDoor(ev.Player, ev.Door.Base))
+            {
+                ev.IsAllowed = false;
+            }
+        }
+        bool OnPlayerInteractDoor(Player player, DoorVariant door)
         {
             if (door.ActiveLocks > 0 && !player.IsBypassEnabled)
                 return true;
@@ -210,13 +238,16 @@ namespace TheRiptide
             return false;
         }
 
-        [PluginEvent(ServerEventType.PlayerDying)]
-        void OnPlayerDying(Player target, Player killer, DamageHandlerBase damage)
+        public override void OnPlayerDying(PlayerDyingEventArgs ev)
         {
-            target.ClearInventory();
+            ev.Player.ClearInventory();
         }
 
-        [PluginEvent(ServerEventType.PlayerSpawn)]
+        public override void OnPlayerSpawned(PlayerSpawnedEventArgs ev)
+        {
+            OnPlayerSpawn(ev.Player, ev.Role.RoleTypeId);
+        }
+
         void OnPlayerSpawn(Player player, RoleTypeId role)
         {
             if (player == null || !player_loadouts.ContainsKey(player.PlayerId))
@@ -311,7 +342,7 @@ namespace TheRiptide
                     AddFirearm(player, loadout.primary, false);
                     if (armor != ItemType.None)
                         AddFirearm(player, loadout.secondary, false);
-                    if(armor == ItemType.ArmorHeavy)
+                    if (armor == ItemType.ArmorHeavy)
                         AddFirearm(player, loadout.tertiary, false);
                 }
                 Killstreaks.Singleton.AddKillstreakStartItems(player);
@@ -325,7 +356,7 @@ namespace TheRiptide
         {
             Loadout loadout = player_loadouts[player.PlayerId];
 
-            if(config.IsBlackListEnabled && config.BlackList.Contains(gun))
+            if (config.IsBlackListEnabled && config.BlackList.Contains(gun))
             {
                 BroadcastOverride.BroadcastLine(player, 2, 5.0f, BroadcastPriority.High, translation.WeaponBanned.Replace("{weapon}", gun.ToString().Substring(3)));
                 return false;

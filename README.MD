@@ -1,4 +1,4 @@
-# Deathmatch Gamemode NW-API
+# Deathmatch Gamemode LabAPI
 ## Features
 - Instant respawn
 - Fully customisable loadouts

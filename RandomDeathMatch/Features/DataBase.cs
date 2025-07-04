@@ -197,9 +197,12 @@ namespace TheRiptide
             BsonMapper.Global.EmptyStringToNull = false;
         }
 
+        public FileStream FS { get; private set; }
+
         public void Load(string config_path)
         {
-            db = new LiteDatabase($"filename={Path.Combine(config_path, "Deathmatch.db")};auto-rebuild=true");
+            FS = new FileStream(Path.Combine(config_path, "Deathmatch.db"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            db = new LiteDatabase(FS);
         }
 
         public void UnLoad()

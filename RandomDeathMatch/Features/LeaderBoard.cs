@@ -279,7 +279,7 @@ namespace TheRiptide
                 {
                     try
                     {
-                        foreach (var p in Player.List)
+                        foreach (var p in Player.ReadyList)
                         {
                             if (p != null && p.UserId != null && user_index.ContainsKey(p.UserId) && player_details[user_index[p.UserId]] == rd)
                             {

@@ -226,7 +226,7 @@ namespace TheRiptide
         {
             Timing.CallDelayed(30.0f, () =>
             {
-                foreach (var player in Player.List)
+                foreach (var player in Player.ReadyList)
                     if (player != null && player_xp.ContainsKey(player.PlayerId))
                         RewardXp(player, config.XpOnRoundStart, translation.RewardXpRoundStart);
             });
@@ -366,7 +366,7 @@ namespace TheRiptide
 
         public void SaveExperiences()
         {
-            foreach (Player p in Player.List)
+            foreach (Player p in Player.ReadyList)
             {
                 if (player_xp.ContainsKey(p.PlayerId))
                 {

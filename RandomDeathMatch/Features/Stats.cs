@@ -203,7 +203,7 @@ namespace TheRiptide
                 }
 
                 attacker_stats[victim.PlayerId].Clear();
-                foreach (var p in Player.List)
+                foreach (var p in Player.ReadyList)
                     if (attacker_stats.ContainsKey(p.PlayerId))
                         attacker_stats[p.PlayerId].Remove(victim.PlayerId);
             }
@@ -320,7 +320,7 @@ namespace TheRiptide
             float most_score = 0.0f;
             string best_player_name = "N/A";
 
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
             {
                 Stats stats = player_stats[player.PlayerId];
                 if (stats.highest_killstreak > highest_killstreak)
@@ -353,14 +353,14 @@ namespace TheRiptide
             string most_kills_msg = translation.HighestKills.Replace("{name}", most_kills_name).Replace("{kills}", most_kills.ToString()); 
             string highest_score_msg = translation.HighestScore.Replace("{name}", best_player_name).Replace("{score}", most_score.ToString());
 
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 BroadcastOverride.SetEvenLineSizes(player, 5);
 
             BroadcastOverride.BroadcastLine(1, 300, BroadcastPriority.Highest, highest_killstreak_msg);
             BroadcastOverride.BroadcastLine(2, 300, BroadcastPriority.Highest, most_kills_msg);
             BroadcastOverride.BroadcastLine(3, 300, BroadcastPriority.Highest, highest_score_msg);
 
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 DisplayStats(player, 4);
             BroadcastOverride.UpdateAllDirty();
         }

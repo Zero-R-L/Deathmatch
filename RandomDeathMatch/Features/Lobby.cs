@@ -110,7 +110,7 @@ namespace TheRiptide
             }
             else if (Player.Count == 2)
             {
-                foreach (var p in Player.List)
+                foreach (var p in Player.ReadyList)
                     if (p.IsAlive)
                         p.ReferenceHub.playerEffectsController.DisableAllEffects();
             }
@@ -133,7 +133,7 @@ namespace TheRiptide
             if(Player.Count == 2)
             {
                 DmRound.GameStarted = false;
-                foreach (var p in Player.List)
+                foreach (var p in Player.ReadyList)
                     if (p.IsAlive)
                         ApplyGameNotStartedEffects(player);
             }
@@ -239,12 +239,12 @@ namespace TheRiptide
                     {
                         if (player == null || !player_spawns.ContainsKey(player.PlayerId))
                             return;
-                        if (Extensions.GetPlayerList().Count() == 1)
+                        if (Player.ReadyList.Count() == 1)
                         {
                             BroadcastOverride.BroadcastLines(player, 1, 1500.0f, BroadcastPriority.Low, translation.WaitingForPlayers);
                             BroadcastOverride.UpdateIfDirty(player);
                         }
-                        else if (Extensions.GetPlayerList().Count() >= 2 && !DmRound.GameStarted)
+                        else if (Player.ReadyList.Count() >= 2 && !DmRound.GameStarted)
                         {
                             DmRound.GameStarted = true;
                             BroadcastOverride.ClearLines(BroadcastPriority.Low);
@@ -309,12 +309,12 @@ namespace TheRiptide
                         {
                             try
                             {
-                                if (Extensions.GetPlayerList().Count() == 1)
+                                if (Player.ReadyList.Count() == 1)
                                 {
                                     BroadcastOverride.BroadcastLines(player, 1, 1500.0f, BroadcastPriority.Low, translation.WaitingForPlayers);
                                     BroadcastOverride.UpdateIfDirty(player);
                                 }
-                                else if (Extensions.GetPlayerList().Count() >= 2 && !DmRound.GameStarted)
+                                else if (Player.ReadyList.Count() >= 2 && !DmRound.GameStarted)
                                 {
                                     DmRound.GameStarted = true;
                                     BroadcastOverride.ClearLines(BroadcastPriority.Low);
@@ -333,12 +333,12 @@ namespace TheRiptide
                 }
                 else
                 {
-                    if (Extensions.GetPlayerList().Count() == 1)
+                    if (Player.ReadyList.Count() == 1)
                     {
                         BroadcastOverride.BroadcastLines(player, 1, 1500.0f, BroadcastPriority.Low, translation.WaitingForPlayers);
                         BroadcastOverride.UpdateIfDirty(player);
                     }
-                    else if (Extensions.GetPlayerList().Count() >= 2 && !DmRound.GameStarted)
+                    else if (Player.ReadyList.Count() >= 2 && !DmRound.GameStarted)
                     {
                         DmRound.GameStarted = true;
                         BroadcastOverride.ClearLines(BroadcastPriority.Low);
@@ -448,7 +448,7 @@ namespace TheRiptide
                         occupied_positions.Add(false);
 
                     HashSet<RoomIdentifier> occupied_rooms = new HashSet<RoomIdentifier>();
-                    foreach (Player p in Player.List)
+                    foreach (Player p in Player.ReadyList)
                     {
                         if (Rooms.ValidPlayerInRoom(p))
                         {

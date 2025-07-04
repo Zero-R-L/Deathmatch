@@ -263,7 +263,7 @@ namespace TheRiptide
                     kill_msg = translation.SelfKill.Replace("{victim}", victim_name);
             }
 
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
             {
                 if (player_killfeed.ContainsKey(player.PlayerId))
                 {
@@ -285,7 +285,7 @@ namespace TheRiptide
 
         public static void UpdateAllDirty()
         {
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 UpdateIfDirty(player);
         }
     }

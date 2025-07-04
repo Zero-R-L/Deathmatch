@@ -44,13 +44,13 @@ namespace TheRiptide
             {
                 if (value == true)
                 {
-                    foreach (var player in Player.List)
+                    foreach (var player in Player.ReadyList)
                         if (player.IsAlive)
                             Killstreaks.Singleton.AddKillstreakStartEffects(player);
                 }
                 else
                 {
-                    foreach (var player in Player.List)
+                    foreach (var player in Player.ReadyList)
                         if (player.IsAlive)
                             Lobby.ApplyGameNotStartedEffects(player);
                 }
@@ -106,7 +106,7 @@ namespace TheRiptide
                     restart_handle = Timing.CallDelayed(config.RoundEndTime, () => Round.Restart(false));
                     Timing.CallPeriodically(config.RoundEndTime, 0.2f, () =>
                     {
-                        foreach (var p in Player.List)
+                        foreach (var p in Player.ReadyList)
                             p.IsGodModeEnabled = true;
                     });
                     try { Statistics.DisplayRoundStats(); }
@@ -126,7 +126,7 @@ namespace TheRiptide
                         LeaderBoard.Singleton.EnableTitle = false;
                         Timing.CallDelayed(Deathmatch.Singleton.leader_board_config.DisplayEndRoundDelay, () =>
                         {
-                            foreach (var p in Player.List)
+                            foreach (var p in Player.ReadyList)
                                 if (p.IsReady)
                                     LeaderBoard.Singleton.EnableLeaderBoardMode(p, Enum.IsDefined(typeof(LeaderBoardType), Deathmatch.Singleton.leader_board_config.LeaderBoardType) ? (LeaderBoardType)Deathmatch.Singleton.leader_board_config.LeaderBoardType : (LeaderBoardType)UnityEngine.Random.Range(0, Enum.GetValues(typeof(LeaderBoardType)).Length));
                         });

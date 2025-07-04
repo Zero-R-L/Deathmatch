@@ -11,6 +11,5 @@ namespace TheRiptide
     public static class Extensions
     {
         public static ushort GetAmmoLimit(this Player player, ItemType itemType) => InventoryLimits.GetAmmoLimit(itemType, player.ReferenceHub);
-        public static IEnumerable<Player> GetPlayerList() => Player.List.Where(x => !x.IsHost);
     }
 }

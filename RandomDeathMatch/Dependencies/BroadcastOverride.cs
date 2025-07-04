@@ -222,7 +222,7 @@ namespace TheRiptide
 
         public static void BroadcastLine(int line, float duration, BroadcastPriority priority, string msg)
         {
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 if (player.IsReady)
                     BroadcastLine(player, line, duration, priority, msg);
         }
@@ -241,7 +241,7 @@ namespace TheRiptide
 
         public static void BroadcastLines(int line, float duration, BroadcastPriority priority, List<string> msgs)
         {
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 if (player.IsReady)
                     BroadcastLines(player, line, duration, priority, msgs);
         }
@@ -254,7 +254,7 @@ namespace TheRiptide
 
         public static void ClearLines(BroadcastPriority priority)
         {
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 if (player.IsReady)
                     ClearLines(player, priority);
         }
@@ -267,7 +267,7 @@ namespace TheRiptide
 
         public static void ClearLine(int line, BroadcastPriority priority)
         {
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 if (player.IsReady)
                     ClearLine(player, line, priority);
         }
@@ -280,7 +280,7 @@ namespace TheRiptide
 
         public static void UpdateAllDirty()
         {
-            foreach (Player player in Player.List)
+            foreach (Player player in Player.ReadyList)
                 if (player.IsReady)
                     UpdateIfDirty(player);
         }

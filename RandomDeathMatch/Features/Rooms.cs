@@ -97,7 +97,7 @@ namespace TheRiptide
                 //    LockdownFacility();
                 //    open_facility = false;
                 //}
-                foreach (Player p in Player.List)
+                foreach (Player p in Player.ReadyList)
                 {
                     if(p != player)
                     {
@@ -213,7 +213,7 @@ namespace TheRiptide
         {
             if(opened_rooms.IsEmpty())
             {
-                foreach (var player in Player.List)
+                foreach (var player in Player.ReadyList)
                     if (SearchForStartRoom(player))
                         break;
                 if (opened_rooms.IsEmpty())
@@ -316,7 +316,7 @@ namespace TheRiptide
             {
                 try
                 {
-                    foreach (Player player in Player.List)
+                    foreach (Player player in Player.ReadyList)
                     {
                         if (ValidPlayerInRoom(player) && closed_rooms.Keys.Contains(player.Room.Base))
                         {
@@ -368,7 +368,7 @@ namespace TheRiptide
                 try
                 {
                     //warn players inside rooms marked for closing
-                    foreach (Player player in Player.List)
+                    foreach (Player player in Player.ReadyList)
                     {
                         if (ValidPlayerInRoom(player) && closing_rooms.ContainsKey(player.Room.Base))
                         {

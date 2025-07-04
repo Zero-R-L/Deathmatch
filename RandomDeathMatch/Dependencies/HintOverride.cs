@@ -159,7 +159,7 @@ namespace TheRiptide
 
         public static void Refresh()
         {
-            foreach (var p in Player.List)
+            foreach (var p in Player.ReadyList)
                 if (p.IsReady && hint_info.ContainsKey(p.PlayerId))
                     hint_info[p.PlayerId].Refresh(p);
         }

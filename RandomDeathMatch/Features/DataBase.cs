@@ -208,6 +208,7 @@ namespace TheRiptide
         public void UnLoad()
         {
             db.Dispose();
+            FS.Dispose();
         }
 
         public void Checkpoint()

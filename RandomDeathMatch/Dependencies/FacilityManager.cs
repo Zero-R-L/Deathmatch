@@ -168,16 +168,18 @@ namespace TheRiptide
         //close all egde room doors/elevators
         public static void CloseRoom(RoomIdentifier room)
         {
-            foreach (var door in DoorVariant.DoorsByRoom[room])
-                if (door.Rooms.Count() == 2)
+            if (!DoorVariant.DoorsByRoom.TryGetValue(room, out var doorVariants)) return;
+            foreach (var door in doorVariants)
+                if (door.Rooms.Length == 2)
                     CloseDoor(door);
         }
 
         //open all egde room doors/elevators
         public static void OpenRoom(RoomIdentifier room)
         {
-            foreach (var door in DoorVariant.DoorsByRoom[room])
-                if (door.Rooms.Count() == 2)
+            if (!DoorVariant.DoorsByRoom.TryGetValue(room, out var doorVariants)) return;
+            foreach (var door in doorVariants)
+                if (door.Rooms.Length == 2)
                     OpenDoor(door);
         }
 

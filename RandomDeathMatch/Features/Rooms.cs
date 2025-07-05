@@ -14,6 +14,7 @@ using System.ComponentModel;
 using static TheRiptide.Translation;
 using LabApi.Events.CustomHandlers;
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Features.Wrappers;
 
 namespace TheRiptide
 {

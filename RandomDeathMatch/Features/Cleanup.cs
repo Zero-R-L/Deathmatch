@@ -112,7 +112,15 @@ namespace TheRiptide
                 {
                     foreach (var item in Ragdoll.List)
                     {
-                        item.Destroy();
+                        if (item.Base.gameObject == null) continue;
+                        try
+                        {
+                            item.Destroy();
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error(e);
+                        }
                     }
                 }
                 catch (Exception ex)

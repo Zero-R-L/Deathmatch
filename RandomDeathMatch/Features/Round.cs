@@ -144,7 +144,7 @@ namespace TheRiptide
             Server.Host.Position = new Vector3(128.8f, 994.0f, 18.0f);
             Round.IsLocked = true;
             Warhead.IsLocked = true;
-            DecontaminationController.Singleton.NetworkDecontaminationOverride = DecontaminationController.DecontaminationStatus.Disabled;
+            DecontaminationController.Singleton.DecontaminationOverride = DecontaminationController.DecontaminationStatus.Disabled;
             AttackerDamageHandler._ffMultiplier = 1.0f;
         }
         public override void OnPlayerJoined(PlayerJoinedEventArgs ev)

@@ -173,8 +173,7 @@ namespace TheRiptide
             }
         }
 
-        private LiteDatabase db;
-        public LiteDatabase DB { get { return db; } }
+        public LiteDatabase DB;
 
         private Database()
         {
@@ -197,23 +196,23 @@ namespace TheRiptide
             BsonMapper.Global.EmptyStringToNull = false;
         }
 
-        public FileStream FS { get; private set; }
-
         public void Load(string config_path)
         {
-            FS = new FileStream(Path.Combine(config_path, "Deathmatch.db"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-            db = new LiteDatabase(FS);
+            DB = new LiteDatabase(new ConnectionString()
+            {
+                Filename = Path.Combine(config_path, "Deathmatch.db"),                
+                AutoRebuild = true,
+            });
         }
 
         public void UnLoad()
         {
-            db.Dispose();
-            FS.Dispose();
+            DB.Dispose();
         }
 
         public void Checkpoint()
         {
-            DbAsync(() => db.Checkpoint());
+            DbAsync(() => DB.Checkpoint());
         }
 
         public void LoadConfig(Player player)
@@ -224,7 +223,7 @@ namespace TheRiptide
                 Lobby.Spawn spawn = Lobby.Singleton.GetSpawn(player);
                 Killstreaks.Killstreak killstreak = Killstreaks.GetKillstreak(player);
 
-                var configs = db.GetCollection<Config>("configs");
+                var configs = DB.GetCollection<Config>("configs");
                 configs.EnsureIndex(x => x.UserId);
                 Config config = configs.FindById(player.UserId);
                 if (config != null)
@@ -297,7 +296,7 @@ namespace TheRiptide
 
             DbAsync(() =>
             {
-                var configs = db.GetCollection<Config>("configs");
+                var configs = DB.GetCollection<Config>("configs");
                 configs.EnsureIndex(x => x.UserId);
                 Config config = new Config { UserId = player.UserId };
                 config.primary = loadout.primary;
@@ -315,7 +314,7 @@ namespace TheRiptide
             DbDelayedAsync(() =>
             {
                 Rank player_rank = Ranks.Singleton.GetRank(player);
-                var ranks = db.GetCollection<Rank>("ranks");
+                var ranks = DB.GetCollection<Rank>("ranks");
                 ranks.EnsureIndex(x => x.UserId);
                 Rank rank = ranks.FindById(player.UserId);
                 Timing.CallDelayed(0.0f, () =>
@@ -345,7 +344,7 @@ namespace TheRiptide
         {
             DbAsync(() =>
             {
-                var ranks = db.GetCollection<Rank>("ranks");
+                var ranks = DB.GetCollection<Rank>("ranks");
                 ranks.EnsureIndex(x => x.UserId);
                 ranks.Upsert(rank);
             });
@@ -356,7 +355,7 @@ namespace TheRiptide
             DbDelayedAsync(() =>
             {
                 Experiences.XP player_xp = Experiences.Singleton.GetXP(player);
-                var experiences = db.GetCollection<Experience>("experiences");
+                var experiences = DB.GetCollection<Experience>("experiences");
                 experiences.EnsureIndex(x => x.UserId);
                 Experience xp = experiences.FindById(player.UserId);
                 Timing.CallDelayed(0.0f, () =>
@@ -385,7 +384,7 @@ namespace TheRiptide
             Experiences.XP player_xp = Experiences.Singleton.GetXP(player);
             DbAsync(() =>
             {
-                var experiences = db.GetCollection<Experience>("experiences");
+                var experiences = DB.GetCollection<Experience>("experiences");
                 experiences.EnsureIndex(x => x.UserId);
                 Experience xp = new Experience { UserId = player.UserId };
                 xp.value = player_xp.value;
@@ -401,21 +400,21 @@ namespace TheRiptide
             Session session = TheRiptide.Tracking.Singleton.GetSession(player);
             DbAsync(() =>
             {
-                var hits = db.GetCollection<Hit>("hits");
+                var hits = DB.GetCollection<Hit>("hits");
                 hits.EnsureIndex(x => x.HitId);
-                var kills = db.GetCollection<Kill>("kills");
+                var kills = DB.GetCollection<Kill>("kills");
                 kills.EnsureIndex(x => x.KillId);
-                var loadouts = db.GetCollection<Loadout>("loadouts");
+                var loadouts = DB.GetCollection<Loadout>("loadouts");
                 loadouts.EnsureIndex(x => x.LoadoutId);
-                var lives = db.GetCollection<Life>("lives");
+                var lives = DB.GetCollection<Life>("lives");
                 lives.EnsureIndex(x => x.LifeId);
-                var rounds = db.GetCollection<Round>("rounds");
+                var rounds = DB.GetCollection<Round>("rounds");
                 rounds.EnsureIndex(x => x.RoundId);
-                var sessions = db.GetCollection<Session>("sessions");
+                var sessions = DB.GetCollection<Session>("sessions");
                 sessions.EnsureIndex(x => x.SessionId);
-                var tracking = db.GetCollection<Tracking>("tracking");
+                var tracking = DB.GetCollection<Tracking>("tracking");
                 tracking.EnsureIndex(x => x.TrackingId);
-                var users = db.GetCollection<User>("users");
+                var users = DB.GetCollection<User>("users");
                 users.EnsureIndex(x => x.UserId);
 
                 foreach(Life life in session.lives)
@@ -469,7 +468,7 @@ namespace TheRiptide
                 if (TheRiptide.LeaderBoard.Singleton.config.BeginEpoch < session.connect && 
                     session.connect < TheRiptide.LeaderBoard.Singleton.config.EndEpoch)
                 {
-                    var leader_board = db.GetCollection<LeaderBoard>("leader_board");
+                    var leader_board = DB.GetCollection<LeaderBoard>("leader_board");
                     leader_board.EnsureIndex(x => x.UserId);
                     LeaderBoard lb = leader_board.FindById(player.UserId);
                     if (lb == null)
@@ -502,15 +501,15 @@ namespace TheRiptide
         {
             DbAsync(() =>
             {
-                var users = db.GetCollection<User>("users");
+                var users = DB.GetCollection<User>("users");
                 users.Delete(user_id);
-                var experiences = db.GetCollection<Experience>("experiences");
+                var experiences = DB.GetCollection<Experience>("experiences");
                 experiences.Delete(user_id);
-                var ranks = db.GetCollection<Rank>("ranks");
+                var ranks = DB.GetCollection<Rank>("ranks");
                 ranks.Delete(user_id);
-                var configs = db.GetCollection<Config>("configs");
+                var configs = DB.GetCollection<Config>("configs");
                 configs.Delete(user_id);
-                var leader_boards = db.GetCollection<LeaderBoard>("leader_board");
+                var leader_boards = DB.GetCollection<LeaderBoard>("leader_board");
                 leader_boards.Delete(user_id);
             });
         }
@@ -526,9 +525,9 @@ namespace TheRiptide
             {
                 try
                 {
-                    lock (db)
+                    lock (DB)
                     {
-                        action.Invoke(db);
+                        action.Invoke(DB);
                     }
                 }
                 catch (System.Exception ex)
@@ -540,11 +539,11 @@ namespace TheRiptide
 
         private void DbAsync(System.Action action)
         {
-            new Task(() =>
+            Task.Run(() =>
             {
                 try
                 {
-                    lock (db)
+                    lock (DB)
                     {
                         action.Invoke();
                     }
@@ -553,7 +552,7 @@ namespace TheRiptide
                 {
                     Logger.Error("Database error: " + ex.ToString());
                 }
-            }).Start();
+            });
         }
 
         private void DbDelayedAsync(System.Action action)
@@ -564,7 +563,7 @@ namespace TheRiptide
                 {
                     try
                     {
-                        lock (db)
+                        lock (DB)
                         {
                             action.Invoke();
                         }

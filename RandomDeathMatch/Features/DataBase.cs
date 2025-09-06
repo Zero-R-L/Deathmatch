@@ -200,7 +200,8 @@ namespace TheRiptide
         {
             DB = new LiteDatabase(new ConnectionString()
             {
-                Filename = Path.Combine(config_path, "Deathmatch.db"),                
+                Filename = Path.Combine(config_path, "Deathmatch.db"), 
+                Connection = ConnectionType.Shared,
                 AutoRebuild = true,
             });
         }
@@ -519,13 +520,14 @@ namespace TheRiptide
             DeleteData(player.UserId);
         }
 
+        private static readonly object dbWriteLock = new();
         public void Async(System.Action<LiteDatabase> action)
         {
             new Task(() =>
             {
                 try
                 {
-                    lock (DB)
+                    lock (dbWriteLock)
                     {
                         action.Invoke(DB);
                     }
@@ -543,7 +545,7 @@ namespace TheRiptide
             {
                 try
                 {
-                    lock (DB)
+                    lock (dbWriteLock)
                     {
                         action.Invoke();
                     }
@@ -563,7 +565,7 @@ namespace TheRiptide
                 {
                     try
                     {
-                        lock (DB)
+                        lock (dbWriteLock)
                         {
                             action.Invoke();
                         }

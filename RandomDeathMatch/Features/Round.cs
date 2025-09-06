@@ -1,4 +1,5 @@
-﻿using LabApi.Events.Arguments.PlayerEvents;
+﻿using CommandSystem.Commands.RemoteAdmin.Decontamination;
+using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.Scp914Events;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.CustomHandlers;
@@ -144,6 +145,7 @@ namespace TheRiptide
             Server.Host.Position = new Vector3(128.8f, 994.0f, 18.0f);
             Round.IsLocked = true;
             Warhead.IsLocked = true;
+            DeadmanSwitch.IsDeadmanSwitchEnabled = false;
             DecontaminationController.Singleton.DecontaminationOverride = DecontaminationController.DecontaminationStatus.Disabled;
             AttackerDamageHandler._ffMultiplier = 1.0f;
         }

@@ -28,8 +28,6 @@ namespace TheRiptide
 {
     public class MainConfig
     {
-        public bool IsEnabled { get; set; } = true;
-
         [Description("round time in minutes")]
         public float RoundTime { get; set; } = 20.0f;
         [Description("round end in seconds")]
@@ -52,12 +50,13 @@ namespace TheRiptide
         {
             Singleton = this;
         }
+        internal const string VersionString = "2.2.1";
         public static Deathmatch Singleton { get; private set; }
         public override string Name => "Deathmatch";
         public override string Description => null;
         public override string Author => "The Riptide & ZeroRL";
-        public override Version Version => new Version(1, 0, 0, 0);
-        public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
+        public override Version Version => Version.Parse(VersionString);
+        public override Version RequiredApiVersion => LabApiProperties.CurrentVersion;
 
         public GlobalReferenceConfig global_reference_config;
         public RoomsConfig rooms_config;
@@ -75,47 +74,27 @@ namespace TheRiptide
 
         public override void LoadConfigs()
         {
-            T LoadConfigOrDefault<T>(string configPath) where T : class, new()
-            {
-                if (this.TryLoadConfig(configPath, out T config))
-                {
-                    return config;
-                }
-
-                Logger.Warn($"Failed to load the {configPath} file, using default values.");
-                return default;
-            }
             base.LoadConfigs();
-            global_reference_config = LoadConfigOrDefault<GlobalReferenceConfig>("global_reference_config.yml");
-            rooms_config = LoadConfigOrDefault<RoomsConfig>("rooms_config.yml");
-            killstreak_config = LoadConfigOrDefault<KillstreakConfig>("killstreak_config.yml");
-            loadout_config = LoadConfigOrDefault<LoadoutConfig>("loadout_config.yml");
-            lobby_config = LoadConfigOrDefault<LobbyConfig>("lobby_config.yml");
-            experience_config = LoadConfigOrDefault<ExperienceConfig>("experience_config.yml");
-            rank_config = LoadConfigOrDefault<RankConfig>("rank_config.yml");
-            tracking_config = LoadConfigOrDefault<TrackingConfig>("tracking_config.yml");
-            translation_config = LoadConfigOrDefault<TranslationConfig>("translation_config.yml");
-            attachment_blacklist_config = LoadConfigOrDefault<AttachmentBlacklistConfig>("attachment_blacklist_config.yml");
-            voice_chat_config = LoadConfigOrDefault<VoiceChatConfig>("voice_chat_config.yml");
-            cleanup_config = LoadConfigOrDefault<CleanupConfig>("cleanup_config.yml");
-            leader_board_config = LoadConfigOrDefault<LeaderBoardConfig>("leader_board_config.yml");
+            global_reference_config = this.LoadConfig<GlobalReferenceConfig>("global_reference_config.yml");
+            rooms_config = this.LoadConfig<RoomsConfig>("rooms_config.yml");
+            killstreak_config = this.LoadConfig<KillstreakConfig>("killstreak_config.yml");
+            loadout_config = this.LoadConfig<LoadoutConfig>("loadout_config.yml");
+            lobby_config = this.LoadConfig<LobbyConfig>("lobby_config.yml");
+            experience_config = this.LoadConfig<ExperienceConfig>("experience_config.yml");
+            rank_config = this.LoadConfig<RankConfig>("rank_config.yml");
+            tracking_config = this.LoadConfig<TrackingConfig>("tracking_config.yml");
+            translation_config = this.LoadConfig<TranslationConfig>("translation_config.yml");
+            attachment_blacklist_config = this.LoadConfig<AttachmentBlacklistConfig>("attachment_blacklist_config.yml");
+            voice_chat_config = this.LoadConfig<VoiceChatConfig>("voice_chat_config.yml");
+            cleanup_config = this.LoadConfig<CleanupConfig>("cleanup_config.yml");
+            leader_board_config = this.LoadConfig<LeaderBoardConfig>("leader_board_config.yml");
         }
         public override void Enable()
         {
-            if (!Config.IsEnabled)
-            {
-                return;
-            }
-
             Start();
         }
         public override void Disable()
         {
-            if (!Config.IsEnabled)
-            {
-                return;
-            }
-
             Stop();
         }
         DmRound DmRound { get; } = new DmRound();

@@ -1,5 +1,4 @@
-﻿using InventorySystem.Items;
-using InventorySystem.Items.Firearms;
+﻿using InventorySystem.Items.Firearms;
 using InventorySystem.Items.Firearms.Attachments;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.CustomHandlers;
@@ -8,7 +7,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using static TheRiptide.Translation;
 
 namespace TheRiptide
@@ -19,13 +17,13 @@ namespace TheRiptide
         public bool IsEnabled { get; set; } = true;
 
         [Description("put black listed attachments here, see global reference config for attachment types")]
-        public List<AttachmentName> BlackList { get; set; } = new List<AttachmentName>();
+        public List<AttachmentName> BlackList { get; set; } = [];
     }
 
     class AttachmentBlacklist : CustomEventsHandler
     {
         public static AttachmentBlacklist Singleton { get; private set; }
-        private Dictionary<ItemType, uint> BannedWeaponCodes = new Dictionary<ItemType,  uint>();
+        private readonly Dictionary<ItemType, uint> BannedWeaponCodes = [];
 
         AttachmentBlacklistConfig config;
 
@@ -83,8 +81,8 @@ namespace TheRiptide
             uint new_code = old_code & BannedWeaponCodes[firearm.ItemTypeId];
             if(new_code != old_code)
             {
-                BitArray ba = new BitArray(BitConverter.GetBytes(~BannedWeaponCodes[firearm.ItemTypeId]));
-                List<string> attachments = new List<string>();
+                BitArray ba = new(BitConverter.GetBytes(~BannedWeaponCodes[firearm.ItemTypeId]));
+                List<string> attachments = [];
                 int index = 0;
                 foreach(bool b in ba)
                 {

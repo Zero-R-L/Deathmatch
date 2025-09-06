@@ -30,10 +30,10 @@ namespace TheRiptide
                 public string msg = "";
             }
 
-            List<Line> lines = new List<Line>();
-            Stopwatch stop_watch = new Stopwatch();
+            readonly List<Line> lines = [];
+            readonly Stopwatch stop_watch = new();
             bool dirty = false;
-            CoroutineHandle handle = new CoroutineHandle();
+            CoroutineHandle handle = new();
 
             public BroadcastInfo()
             {
@@ -44,7 +44,7 @@ namespace TheRiptide
             {
                 UpdateDuration();
 
-                List<int> sizes = new List<int> { 178, 89, 59, 44, 35, 29, 25, 22, 19, 17, 16, 14, 12, 11 };
+                List<int> sizes = [178, 89, 59, 44, 35, 29, 25, 22, 19, 17, 16, 14, 12, 11];
                 int dif = line_count - lines.Count;
                 for (int i = 0; i < dif; i++)
                     lines.Add(new Line());
@@ -179,7 +179,7 @@ namespace TheRiptide
             }
         }
 
-        static Dictionary<int, BroadcastInfo> broadcast_info = new Dictionary<int, BroadcastInfo>();
+        static readonly Dictionary<int, BroadcastInfo> broadcast_info = [];
 
         public static void SetEvenLineSizes(Player player, int line_count)
         {

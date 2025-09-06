@@ -1,6 +1,5 @@
 ﻿using InventorySystem;
 using InventorySystem.Items;
-using InventorySystem.Items.Armor;
 using InventorySystem.Items.Firearms;
 using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Firearms.Modules;

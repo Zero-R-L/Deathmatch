@@ -7,8 +7,6 @@ using PlayerStatsSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static TheRiptide.Utility;
 using UnityEngine;
 using CommandSystem;
@@ -25,10 +23,10 @@ namespace TheRiptide
         public bool TrackLoadouts { get; set; } = true;
         public bool TrackRounds { get; set; } = true;
 
-        public List<PlayerPermissions> TrackingCmdPermissions { get; set; } = new List<PlayerPermissions>
-        {
+        public List<PlayerPermissions> TrackingCmdPermissions { get; set; } =
+        [
             PlayerPermissions.ServerConsoleCommands
-        };
+        ];
     }
 
     public class Tracking : CustomEventsHandler
@@ -36,9 +34,9 @@ namespace TheRiptide
         public static Tracking Singleton { get; private set; }
         private TrackingConfig config;
 
-        private Database.Round current_round = new Database.Round();
-        private Dictionary<int, Database.Session> player_sessions = new Dictionary<int, Database.Session>();
-        private Dictionary<int, Database.Life> player_life = new Dictionary<int, Database.Life>();
+        private Database.Round current_round = new();
+        private readonly Dictionary<int, Database.Session> player_sessions = [];
+        private readonly Dictionary<int, Database.Life> player_life = [];
         private Action<ReferenceHub, DamageHandlerBase> OnPlayerDamaged;
 
         public Tracking()
@@ -140,7 +138,7 @@ namespace TheRiptide
             {
                 Database.Life victim_life = player_life[victim.PlayerId];
                 Database.Life killer_life = player_life[killer.PlayerId];
-                Database.Kill kill = new Database.Kill();
+                Database.Kill kill = new();
                 victim_life.death = kill;
                 killer_life.kills.Add(kill);
                 if(damage is StandardDamageHandler standard)
@@ -163,7 +161,7 @@ namespace TheRiptide
                 {
                     Database.Life victim_life = player_life[victim.PlayerId];
                     Database.Life attacker_life = player_life[attacker.PlayerId];
-                    Database.Hit hit = new Database.Hit();
+                    Database.Hit hit = new();
                     victim_life.received.Add(hit);
                     attacker_life.delt.Add(hit);
                     hit.health = (byte)victim.Health;
@@ -196,8 +194,7 @@ namespace TheRiptide
             {
                 try
                 {
-                    Player player;
-                    if (Player.TryGet(id, out player))
+                    if (Player.TryGet(id, out Player player))
                         Database.Singleton.UpdateLeaderBoard(player);
                 }
                 catch(Exception ex)
@@ -212,7 +209,7 @@ namespace TheRiptide
             if(player != null && player_sessions.ContainsKey(player.PlayerId))
             {
                 Database.Session session = player_sessions[player.PlayerId];
-                Database.Life life = new Database.Life();
+                Database.Life life = new();
                 Database.Loadout loadout = null;
                 session.lives.Add(life);
                 if (player_life.ContainsKey(player.PlayerId))
@@ -225,12 +222,11 @@ namespace TheRiptide
                 life.role = Lobby.Singleton.GetSpawn(player).role;
                 if (config.TrackLoadouts)
                 {
-                    if (loadout == null)
-                        loadout = new Database.Loadout();
+                    loadout ??= new Database.Loadout();
 
                     var weapon_attachments = AttachmentsServerHandler.PlayerPreferences[player.ReferenceHub];
                     Loadouts.Loadout player_loadout = Loadouts.GetLoadout(player);
-                    Database.Loadout new_loadout = new Database.Loadout();
+                    Database.Loadout new_loadout = new();
 
                     new_loadout.killstreak_mode = Killstreaks.GetKillstreak(player).name;
                     new_loadout.primary = player_loadout.primary;
@@ -264,13 +260,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_delete_user";
 
-            public string[] Aliases { get; } = new string[] {};
+            public string[] Aliases { get; } = [];
 
             public string Description { get; } = "delete a player from the database using the players id e.g. 762394880234@steam. usage: dm_delete_user <user_id>";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.TrackingCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.TrackingCmdPermissions], out response))
                     return false;
 
                 if (arguments.Count == 0)

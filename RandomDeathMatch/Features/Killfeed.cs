@@ -35,9 +35,9 @@ namespace TheRiptide
                 }
             }
 
-            List<Item> killfeed = new List<Item>();
+            readonly List<Item> killfeed = [];
             CoroutineHandle handle;
-            Stopwatch stop_watch = new Stopwatch();
+            readonly Stopwatch stop_watch = new();
             bool dirty = false;
 
             public void PushKill(bool is_special, string msg, float duration)
@@ -112,11 +112,11 @@ namespace TheRiptide
             }
         }
 
-        static Dictionary<int, Killfeed> player_killfeed = new Dictionary<int, Killfeed>();
+        static readonly Dictionary<int, Killfeed> player_killfeed = [];
 
-        static float standard_duration = 5.0f;
-        static float special_duration = 10.0f;
-        static List<int> broadcast_layout = new List<int>();
+        static readonly float standard_duration = 5.0f;
+        static readonly float special_duration = 10.0f;
+        static readonly List<int> broadcast_layout = [];
         public static int killfeed_size = 0;
         static int aux_size = 0;
 

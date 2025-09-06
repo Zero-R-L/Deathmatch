@@ -1,6 +1,4 @@
-﻿using Interactables.Interobjects;
-using Interactables.Interobjects.DoorUtils;
-using LabApi.Features.Wrappers;
+﻿using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
 using MEC;
 
@@ -20,13 +18,13 @@ namespace TheRiptide
         public enum Direction { North, East, South, West, Up, Down };
 
         //facility graph
-        private static Dictionary<RoomIdentifier, Dictionary<RoomIdentifier, Direction>> room_adjacent_rooms = new Dictionary<RoomIdentifier, Dictionary<RoomIdentifier, Direction>>();
-        private static HashSet<DoorVariant> edge_doors = new HashSet<DoorVariant>();
-        private static HashSet<ElevatorDoor> edge_elevators = new HashSet<ElevatorDoor>();
-        private static Dictionary<RoomIdentifier, HashSet<DoorVariant>> room_edges = new Dictionary<RoomIdentifier, HashSet<DoorVariant>>();
+        private static readonly Dictionary<RoomIdentifier, Dictionary<RoomIdentifier, Direction>> room_adjacent_rooms = [];
+        private static readonly HashSet<DoorVariant> edge_doors = [];
+        private static readonly HashSet<ElevatorDoor> edge_elevators = [];
+        private static readonly Dictionary<RoomIdentifier, HashSet<DoorVariant>> room_edges = [];
 
         //facility lights
-        private static Dictionary<RoomIdentifier, RoomLightController> room_lights = new Dictionary<RoomIdentifier, RoomLightController>();
+        private static readonly Dictionary<RoomIdentifier, RoomLightController> room_lights = [];
 
         public static void MapGenerated()
         {
@@ -43,8 +41,8 @@ namespace TheRiptide
 
                     foreach (RoomIdentifier room in RoomIdentifier.AllRoomIdentifiers)
                     {
-                        room_adjacent_rooms.Add(room, new Dictionary<RoomIdentifier, Direction>());
-                        room_edges.Add(room, new HashSet<DoorVariant>());
+                        room_adjacent_rooms.Add(room, []);
+                        room_edges.Add(room, []);
                         room_lights.Add(room, room.GetComponentInChildren<RoomLightController>());
                     }
 
@@ -64,7 +62,7 @@ namespace TheRiptide
                         if (elevators.Count() == 2 && elevators[0].Rooms.First() != elevators[1].Rooms.First())
                         {
                             edge_elevators.UnionWith(elevators);
-                            AddAdjacentRoom(new RoomIdentifier[] { elevators[0].Rooms.First(), elevators[1].Rooms.First() });
+                            AddAdjacentRoom([elevators[0].Rooms.First(), elevators[1].Rooms.First()]);
                             room_edges[elevators[0].Rooms.First()].UnionWith(elevators);
                             room_edges[elevators[1].Rooms.First()].UnionWith(elevators);
                         }
@@ -120,7 +118,7 @@ namespace TheRiptide
         //lock all egde room doors/elevators
         public static void LockRooms(HashSet<RoomIdentifier> rooms, DoorLockReason reason)
         {
-            HashSet<DoorVariant> doors = new HashSet<DoorVariant>();
+            HashSet<DoorVariant> doors = [];
             foreach (var room in rooms)
                 doors.UnionWith(room_edges[room]);
             foreach (var door in doors)
@@ -130,7 +128,7 @@ namespace TheRiptide
         //unlock all egde room doors/elevators
         public static void UnlockRooms(HashSet<RoomIdentifier> rooms, DoorLockReason reason)
         {
-            HashSet<DoorVariant> doors = new HashSet<DoorVariant>();
+            HashSet<DoorVariant> doors = [];
             foreach (var room in rooms)
                 doors.UnionWith(room_edges[room]);
             foreach (var door in doors)
@@ -186,7 +184,7 @@ namespace TheRiptide
         //close all egde room doors/elevators
         public static void CloseRooms(HashSet<RoomIdentifier> rooms)
         {
-            HashSet<DoorVariant> doors = new HashSet<DoorVariant>();
+            HashSet<DoorVariant> doors = [];
             foreach (var room in rooms)
                 doors.UnionWith(DoorVariant.DoorsByRoom[room]);
             foreach (var door in doors)
@@ -197,7 +195,7 @@ namespace TheRiptide
         //open all egde room doors/elevators
         public static void OpenRooms(HashSet<RoomIdentifier> rooms)
         {
-            HashSet<DoorVariant> doors = new HashSet<DoorVariant>();
+            HashSet<DoorVariant> doors = [];
             foreach (var room in rooms)
                 doors.UnionWith(DoorVariant.DoorsByRoom[room]);
             foreach (var door in doors)
@@ -267,7 +265,7 @@ namespace TheRiptide
 
         private static HashSet<DoorVariant> JointDoors(HashSet<RoomIdentifier> rooms, Dictionary<RoomIdentifier, HashSet<DoorVariant>> dict)
         {
-            Dictionary<DoorVariant, int> door_counts = new Dictionary<DoorVariant, int>();
+            Dictionary<DoorVariant, int> door_counts = [];
             foreach (var room in rooms)
             {
                 foreach (var door in dict[room])
@@ -278,7 +276,7 @@ namespace TheRiptide
                         door_counts.Add(door, 1);
                 }
             }
-            HashSet<DoorVariant> result = new HashSet<DoorVariant>();
+            HashSet<DoorVariant> result = [];
             foreach (var door_count in door_counts)
                 if (door_count.Value != 1)
                     result.Add(door_count.Key);
@@ -322,7 +320,7 @@ namespace TheRiptide
         private static Direction RoomDirection(RoomIdentifier from, RoomIdentifier to)
         {
             Vector3 difference = from.transform.position - to.transform.position;
-            Vector3 abs = new Vector3(Math.Abs(difference.x), Math.Abs(difference.y), Math.Abs(difference.z));
+            Vector3 abs = new(Math.Abs(difference.x), Math.Abs(difference.y), Math.Abs(difference.z));
             if (abs.x > abs.y && abs.x > abs.z)
             {
                 if (difference.x > 0)

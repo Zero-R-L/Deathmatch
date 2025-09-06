@@ -30,9 +30,9 @@ namespace TheRiptide
         public VoiceChatConfig config;
 
         public enum TalkMode { GlobalTalkGlobalReceive, ProximityTalkGlobalReceive, ProximityTalkProximityReceive };
-        private Dictionary<int, TalkMode> player_mode = new Dictionary<int, TalkMode>();
+        private readonly Dictionary<int, TalkMode> player_mode = [];
         private bool force_mode = false;
-        private Harmony harmony;
+        private readonly Harmony harmony;
 
         public VoiceChat()
         {
@@ -99,7 +99,7 @@ namespace TheRiptide
         {
             static bool Prefix(NetworkConnection conn, VoiceMessage msg)
             {
-                if (msg.SpeakerNull || (int)msg.Speaker.netId != (int)conn.identity.netId || !(msg.Speaker.roleManager.CurrentRole is IVoiceRole currentRole1) || !currentRole1.VoiceModule.CheckRateLimit() || VoiceChatMutes.IsMuted(msg.Speaker))
+                if (msg.SpeakerNull || (int)msg.Speaker.netId != (int)conn.identity.netId || msg.Speaker.roleManager.CurrentRole is not IVoiceRole currentRole1 || !currentRole1.VoiceModule.CheckRateLimit() || VoiceChatMutes.IsMuted(msg.Speaker))
                     return false;
 
                 bool global_talk = Singleton.IsGlobalTalk(msg.Speaker.PlayerId);
@@ -181,12 +181,12 @@ namespace TheRiptide
 
                 int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Ret) + 1;
 
-                newInstructions.InsertRange(index, new CodeInstruction[]
-                {
+                newInstructions.InsertRange(index,
+                [
                     new CodeInstruction(OpCodes.Ldloc_0).MoveLabelsFrom(newInstructions[index]),
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(VoiceChat), nameof(VoiceChat.OnPlayerTogglingNoClip))),
-                    new CodeInstruction(OpCodes.Brfalse, ret),
-                });
+                    new(OpCodes.Call, AccessTools.Method(typeof(VoiceChat), nameof(VoiceChat.OnPlayerTogglingNoClip))),
+                    new(OpCodes.Brfalse, ret),
+                ]);
 
                 foreach (CodeInstruction instruction in newInstructions)
                     yield return instruction;

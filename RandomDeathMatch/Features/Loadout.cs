@@ -1,23 +1,11 @@
 ﻿using InventorySystem.Items;
 using InventorySystem.Items.Firearms;
-using InventorySystem.Items.Pickups;
-using InventorySystem.Items.Radio;
-using MapGeneration;
 using Interactables.Interobjects;
 using Mirror;
 using MEC;
 using PlayerRoles;
-using PlayerStatsSystem;
-
-
-
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.ComponentModel;
-using Unity.Mathematics;
 using static TheRiptide.Utility;
 using static TheRiptide.Translation;
 using Interactables.Interobjects.DoorUtils;
@@ -31,12 +19,12 @@ namespace TheRiptide
         public bool IsBlackListEnabled { get; set; } = true;
 
         [Description("put black listed weapons here, see below for all weapons. does not effect weapons granted as a reward only guns on the menu")]
-        public List<ItemType> BlackList { get; set; } = new List<ItemType>();
+        public List<ItemType> BlackList { get; set; } = [];
 
 
         [Description("list of all the different weapons (changing this does nothing)")]
-        public List<ItemType> AllWeapons { get; set; } = new List<ItemType>
-        {
+        public List<ItemType> AllWeapons { get; set; } =
+        [
             ItemType.GunAK,
             ItemType.GunCOM15,
             ItemType.GunCOM18,
@@ -47,7 +35,7 @@ namespace TheRiptide
             ItemType.GunLogicer,
             ItemType.GunRevolver,
             ItemType.GunShotgun
-        };
+        ];
     }
 
     public class Loadouts : CustomEventsHandler
@@ -70,7 +58,7 @@ namespace TheRiptide
             public bool rage_mode_enabled = false;
         }
 
-        public static Dictionary<int, Loadout> player_loadouts = new Dictionary<int, Loadout>();
+        public static Dictionary<int, Loadout> player_loadouts = [];
 
         public Loadouts()
         {

@@ -1,9 +1,6 @@
 ﻿using InventorySystem.Items;
-using InventorySystem.Items.ThrowableProjectiles;
-using InventorySystem.Items.Usables;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.CustomHandlers;
-using LabApi.Features.Wrappers;
 using MEC;
 using PlayerStatsSystem;
 
@@ -12,54 +9,35 @@ using PlayerStatsSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using UsableItem = InventorySystem.Items.Usables.UsableItem;
 
 namespace TheRiptide
 {
-    public class MenuItem
+    public class MenuItem(ItemType item, string description, Func<Player, bool> on_click)
     {
-        public ItemType item;
-        public string description;
-        public Func<Player, bool> on_click;
-
-        public MenuItem(ItemType item, string description, Func<Player, bool> on_click)
-        {
-            this.item = item;
-            this.description = description;
-            this.on_click = on_click;
-        }
+        public ItemType item = item;
+        public string description = description;
+        public Func<Player, bool> on_click = on_click;
     }
 
-    public class Menu
+    public class Menu(string description, List<MenuItem> items)
     {
-        public string description;
-        public List<MenuItem> items;
-
-        public Menu(string description, List<MenuItem> items)
-        {
-            this.description = description;
-            this.items = items;
-        }
+        public string description = description;
+        public List<MenuItem> items = items;
     }
 
-    public struct MenuInfo
+    public struct MenuInfo(int total_items, int broadcast_lines)
     {
-        public int total_items;
-        public int broadcast_lines;
-        public MenuInfo(int total_items, int broadcast_lines)
-        {
-            this.total_items = total_items;
-            this.broadcast_lines = broadcast_lines;
-        }
+        public int total_items = total_items;
+        public int broadcast_lines = broadcast_lines;
     }
 
     public class InventoryMenu : CustomEventsHandler
     {
         public static InventoryMenu Singleton { get; private set; }
 
-        static Dictionary<int, int> player_menu = new Dictionary<int, int>();
-        static Dictionary<int, Menu> menus = new Dictionary<int, Menu>();
+        static readonly Dictionary<int, int> player_menu = [];
+        static readonly Dictionary<int, Menu> menus = [];
 
         public InventoryMenu()
         {
@@ -167,8 +145,8 @@ namespace TheRiptide
             player.ClearInventory();
             player.ReferenceHub.inventory.SendAmmoNextFrame = true;
             BroadcastOverride.ClearLines(player, BroadcastPriority.High);
-            List<string> broadcast = new List<string>();
-            List<ItemType> items = new List<ItemType>();
+            List<string> broadcast = [];
+            List<ItemType> items = [];
             if (menu.description != "")
                 broadcast.Add(menu.description);
             for (int i = 0; i < menu.items.Count(); i++)

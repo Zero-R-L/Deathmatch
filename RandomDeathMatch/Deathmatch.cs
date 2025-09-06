@@ -1,20 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-
-using MEC;
-
-
-
-
-using PlayerRoles;
-using UnityEngine;
 using System.ComponentModel;
 using CustomPlayerEffects;
 using InventorySystem.Items.Firearms.Attachments;
-using LightContainmentZoneDecontamination;
-using PlayerStatsSystem;
 using static TheRiptide.Translation;
-using static RoundSummary;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.CustomHandlers;
 using LabApi.Events.Handlers;
@@ -39,9 +28,9 @@ namespace TheRiptide
     public class GlobalReferenceConfig
     {
         [Description("[AUTO GENERATED FILE] may contain types which no longer work. A reference list of types to be used in other configs (do not edit)")]
-        public List<ItemType> AllItems { get; set; } = new List<ItemType>();
-        public List<string> AllEffects { get; set; } = new List<string>();
-        public List<AttachmentName> AllAttachments { get; set; } = new List<AttachmentName>();
+        public List<ItemType> AllItems { get; set; } = [];
+        public List<string> AllEffects { get; set; } = [];
+        public List<AttachmentName> AllAttachments { get; set; } = [];
     }
 
     public class Deathmatch : Plugin<MainConfig>

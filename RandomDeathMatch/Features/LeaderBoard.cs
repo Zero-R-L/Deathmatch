@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LiteDB;
 using MEC;
 
@@ -11,7 +9,6 @@ using MEC;
 
 using UnityEngine;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using PlayerRoles.FirstPersonControl;
 using static TheRiptide.Translation;
 using CommandSystem;
@@ -77,10 +74,10 @@ namespace TheRiptide
         public string BottomRightCorner { get; set; } = "╹";
 
         [Description("use this after changing the start/end epoch. rebuilding might be very slow")]
-        public List<PlayerPermissions> lbCmdPermissions { get; set; } = new List<PlayerPermissions>
-        {
+        public List<PlayerPermissions> lbCmdPermissions { get; set; } =
+        [
             PlayerPermissions.ServerConsoleCommands
-        };
+        ];
     }
 
     enum LeaderBoardType { Rank, Experience, Killstreak, Kills, Time }
@@ -107,13 +104,13 @@ namespace TheRiptide
             //public float hit_head_shot_percentage;
             //public float hit_accuracy_percentage;
             public string record_cache = "";
-            public Dictionary<LeaderBoardType, int> position_cache = new Dictionary<LeaderBoardType, int>();
+            public Dictionary<LeaderBoardType, int> position_cache = [];
             public bool connected = false;
         }
 
-        private Dictionary<string, int> user_index = new Dictionary<string, int>();
-        private List<PlayerDetails> player_details = new List<PlayerDetails>();
-        private Dictionary<LeaderBoardType, List<int>> type_order = new Dictionary<LeaderBoardType, List<int>>()
+        private readonly Dictionary<string, int> user_index = [];
+        private readonly List<PlayerDetails> player_details = [];
+        private readonly Dictionary<LeaderBoardType, List<int>> type_order = new()
         {
             { LeaderBoardType.Rank,          new List<int>{} },
             { LeaderBoardType.Experience,    new List<int>{} },
@@ -129,7 +126,7 @@ namespace TheRiptide
             public float cooldown = 0;
         }
 
-        private Dictionary<int, State> player_leader_board_state = new Dictionary<int, State>();
+        private readonly Dictionary<int, State> player_leader_board_state = [];
         private CoroutineHandle controller;
         private int rank_width;
         private int xp_width;
@@ -215,8 +212,8 @@ namespace TheRiptide
                 return;
             }
 
-            Func<string, bool, string> highlight = new Func<string, bool, string>((s, b) => { return b ? "<b>" + config.LedgendHighlightColor + s + "</color></b>" : config.LedgendColor + s + "</color>"; });
-            Func<string, string> tc = new Func<string, string>((s) => config.TableColor + s + "</color>");
+            Func<string, bool, string> highlight = new((s, b) => { return b ? "<b>" + config.LedgendHighlightColor + s + "</color></b>" : config.LedgendColor + s + "</color>"; });
+            Func<string, string> tc = new((s) => config.TableColor + s + "</color>");
 
             string ledgend =
                 tc(config.Vertical) + highlight(translation.LedgendPos.PadRight(config.PositionWidth), false) +
@@ -229,7 +226,7 @@ namespace TheRiptide
                 tc(config.Vertical) + "\n";
 
             string lb = config.VOffset + "<line-height=100%>" + (EnableTitle ? translation.LeaderBoardTitle : "\n\n\n") + translation.LeaderBoardControl + config.Format + '\n';
-            Func<string, string, string, string, string> build_row = new Func<string, string, string, string, string>((l, m, i, r) =>
+            Func<string, string, string, string, string> build_row = new((l, m, i, r) =>
             {
                 return tc(
                 l + new string(m.First(), config.PositionWidth) +
@@ -245,10 +242,9 @@ namespace TheRiptide
             lb += ledgend;
             lb += build_row(config.LeftJunction, config.LedgendHorizontal, config.LedgendIntersection, config.RightJunction);
 
-            PlayerDetails pd = null;
-            if (!user_index.ContainsKey(player.UserId) || !player_details.TryGet(user_index[player.UserId], out pd))
-                pd = new PlayerDetails { connected = true, name = player.Nickname, position_cache = new Dictionary<LeaderBoardType, int> { {LeaderBoardType.Experience, 99999 }, { LeaderBoardType.Kills, 99999 }, { LeaderBoardType.Killstreak, 99999 }, { LeaderBoardType.Rank, 99999 }, { LeaderBoardType.Time, 99999 } }};
-            if(!pd.position_cache.ContainsKey(type))
+            if (!user_index.ContainsKey(player.UserId) || !player_details.TryGet(user_index[player.UserId], out PlayerDetails pd))
+                pd = new PlayerDetails { connected = true, name = player.Nickname, position_cache = new Dictionary<LeaderBoardType, int> { { LeaderBoardType.Experience, 99999 }, { LeaderBoardType.Kills, 99999 }, { LeaderBoardType.Killstreak, 99999 }, { LeaderBoardType.Rank, 99999 }, { LeaderBoardType.Time, 99999 } } };
+            if (!pd.position_cache.ContainsKey(type))
                 pd.position_cache.Add(type, type_order[type].FindIndex((p) => user_index[player.UserId] == p));
 
             int line = page * (config.LinesPerPage - 1);
@@ -274,7 +270,7 @@ namespace TheRiptide
                     position = i + 1;
                 }
 
-                Func<string, bool, string> record_highlight = new Func<string, bool, string>((s, b) => b ? config.RecordHighlightColor + s + "</color>" : config.RecordColor + s + "</color>");
+                Func<string, bool, string> record_highlight = new((s, b) => b ? config.RecordHighlightColor + s + "</color>" : config.RecordColor + s + "</color>");
                 if(rd.record_cache == "")
                 {
                     try
@@ -367,9 +363,7 @@ namespace TheRiptide
                     //rank
                     foreach (var rank in db_ranks)
                     {
-                        int index;
-                        PlayerDetails details;
-                        if (user_index.TryGetValue(rank.UserId, out index) && player_details.TryGet(index, out details))
+                        if (user_index.TryGetValue(rank.UserId, out int index) && player_details.TryGet(index, out PlayerDetails details))
                         {
                             RankInfo info = Ranks.Singleton.GetInfo(rank);
                             details.rank_rating = rank.rating;
@@ -383,9 +377,7 @@ namespace TheRiptide
                     ulong tier_stride = stage_stride * (ulong)Experiences.Singleton.config.StageTags.Count;
                     foreach (var xp in db_xps)
                     {
-                        int index;
-                        PlayerDetails details;
-                        if (user_index.TryGetValue(xp.UserId, out index) && player_details.TryGet(index, out details))
+                        if (user_index.TryGetValue(xp.UserId, out int index) && player_details.TryGet(index, out PlayerDetails details))
                         {
                             details.xp_total = (ulong)xp.tier * tier_stride + (ulong)xp.stage * stage_stride + (ulong)xp.level * level_stride + (ulong)xp.value;
                             details.xp_tag = Experiences.Singleton.LeaderBoardString(new Experiences.XP { tier = xp.tier, stage = xp.stage, level = xp.level, value = xp.value });
@@ -395,9 +387,7 @@ namespace TheRiptide
                     //other
                     foreach (var record in db_leaderboard)
                     {
-                        int index;
-                        PlayerDetails details;
-                        if (user_index.TryGetValue(record.UserId, out index) && player_details.TryGet(index, out details))
+                        if (user_index.TryGetValue(record.UserId, out int index) && player_details.TryGet(index, out PlayerDetails details))
                         {
                             details.total_kills = record.total_kills;
                             details.highest_killstreak = record.highest_killstreak;
@@ -418,11 +408,10 @@ namespace TheRiptide
                     {
                         try
                         {
-                            Player player;
-                            if (Player.TryGet(id, out player))
+                            if (Player.TryGet(id, out Player player))
                                 DisplayLeaderBoard(player, player_leader_board_state[id].type, player_leader_board_state[id].page);
                         }
-                        catch (System.Exception ex)
+                        catch (Exception ex)
                         {
                             Logger.Error("update leaderboard error: " + ex.ToString());
                         }
@@ -436,7 +425,7 @@ namespace TheRiptide
             Logger.Info("Rebuilding leader board");
             Database.Singleton.Async((db) =>
             {
-                Stopwatch stopwatch = new Stopwatch();
+                Stopwatch stopwatch = new();
                 stopwatch.Start();
                 var leader_boards = Database.Singleton.DB.GetCollection<Database.LeaderBoard>("leader_board");
                 var users = Database.Singleton.DB.GetCollection<Database.User>("users");
@@ -454,7 +443,7 @@ namespace TheRiptide
                 var all_users = users.Include(x => x.tracking).FindAll();
                 foreach (var user in all_users)
                 {
-                    Database.LeaderBoard lb = new Database.LeaderBoard { UserId = user.UserId };
+                    Database.LeaderBoard lb = new() { UserId = user.UserId };
                     var tracker = tracking.Include(x => x.sessions).FindById(user.tracking.TrackingId);
                     if (tracker != null && tracker.sessions != null)
                     {
@@ -499,12 +488,12 @@ namespace TheRiptide
 
         private List<int> SortIndex<T>(Func<PlayerDetails,T> key_selector)
         {
-            return player_details.Select((x, i) => new KeyValuePair<PlayerDetails, int>(x, i)).OrderByDescending(x => key_selector(x.Key)).Select(x => x.Value).ToList();
+            return [.. player_details.Select((x, i) => new KeyValuePair<PlayerDetails, int>(x, i)).OrderByDescending(x => key_selector(x.Key)).Select(x => x.Value)];
         }
 
         private IEnumerator<float> _Controller()
         {
-            Stopwatch stopwatch = new Stopwatch();
+            Stopwatch stopwatch = new();
             stopwatch.Start();
             while (true)
             {
@@ -514,8 +503,7 @@ namespace TheRiptide
                 {
                     try
                     {
-                        Player player;
-                        if (Player.TryGet(id, out player))
+                        if (Player.TryGet(id, out Player player))
                         {
                             State state = player_leader_board_state[id];
                             state.cooldown -= delta;
@@ -586,13 +574,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_rebuild_lb";
 
-            public string[] Aliases { get; } = new string[] { "dmrblb" };
+            public string[] Aliases { get; } = ["dmrblb"];
 
             public string Description { get; } = "rebuilds leader board using the updated config. warning this command might be very slow";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.lbCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.lbCmdPermissions], out response))
                     return false;
 
                 Singleton.RebuildLeaderBoard();

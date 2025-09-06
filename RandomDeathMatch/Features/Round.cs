@@ -1,5 +1,4 @@
-﻿using CommandSystem.Commands.RemoteAdmin.Decontamination;
-using LabApi.Events.Arguments.PlayerEvents;
+﻿using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.Scp914Events;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.CustomHandlers;
@@ -8,16 +7,8 @@ using LightContainmentZoneDecontamination;
 using MEC;
 using PlayerRoles;
 using PlayerStatsSystem;
-
-
-
-
-using Scp914;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using static TheRiptide.Translation;
 
@@ -31,7 +22,7 @@ namespace TheRiptide
 
         private static bool game_started = false;
         public static bool game_ended = false;
-        public static SortedSet<int> players = new SortedSet<int>();
+        public static SortedSet<int> players = [];
         public Action OnConfigReloaded;
         private CoroutineHandle restart_handle;
         private CoroutineHandle round_timer_handle;

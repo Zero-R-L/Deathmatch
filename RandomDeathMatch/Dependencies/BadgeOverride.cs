@@ -9,7 +9,7 @@ namespace TheRiptide
 {
     class BadgeOverride : CustomEventsHandler
     {
-        public static readonly Dictionary<string, string> ColorNameToHex = new Dictionary<string, string>
+        public static readonly Dictionary<string, string> ColorNameToHex = new()
         {
             {"pink", "#FF96DE"},
             {"red", "#C50000"},
@@ -46,7 +46,7 @@ namespace TheRiptide
 
         public class Badge
         {
-            public List<string> badges = new List<string>();
+            public List<string> badges = [];
 
             public string BadgeText()
             {
@@ -58,7 +58,7 @@ namespace TheRiptide
         }
 
         private int slots = 0;
-        private Dictionary<int, Badge> player_badges = new Dictionary<int, Badge>();
+        private readonly Dictionary<int, Badge> player_badges = [];
 
         public BadgeOverride()
         {
@@ -77,7 +77,7 @@ namespace TheRiptide
         void OnPlayerJoined(Player player)
         {
             int id = player.PlayerId;
-            Badge badge = new Badge();
+            Badge badge = new();
             for (int i = 0; i < slots; i++)
                 badge.badges.Add("");
             if (!player_badges.ContainsKey(id))

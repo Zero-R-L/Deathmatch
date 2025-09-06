@@ -5,8 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Glicko2;
 using CommandSystem;
 using System.ComponentModel;
@@ -48,32 +46,32 @@ namespace TheRiptide
         //public float RatingVolatility { get; set; } = 0.06f;
 
         [Description("ranks must be in order of least rating to most rating and colors must be a valid servergroup colors see https://en.scpslgame.com/index.php/Docs:Permissions \n#All players start out with a 1500 rating when they enter placement. Ranks should be scaled around the 1500 mark.")]
-        public List<RankInfo> Ranks { get; set; } = new List<RankInfo>
-        {
-            new RankInfo{ Name = "Silver I",                        Tag = "S1",     Rating = -150,     Color = "nickel" },
-            new RankInfo{ Name = "Silver II",                       Tag = "S2",     Rating = 0,        Color = "nickel" },
-            new RankInfo{ Name = "Silver III",                      Tag = "S3",     Rating = 150,      Color = "nickel" },
-            new RankInfo{ Name = "Silver IV",                       Tag = "S4",     Rating = 300,      Color = "nickel" },
-            new RankInfo{ Name = "Silver Elite",                    Tag = "SE",     Rating = 550,      Color = "silver" },
-            new RankInfo{ Name = "Silver Elite Master",             Tag = "SEM",    Rating = 700,      Color = "silver" },
-            new RankInfo{ Name = "Gold Nova I",                     Tag = "GN1",    Rating = 950,      Color = "cyan" },
-            new RankInfo{ Name = "Gold Nova II",                    Tag = "GN2",    Rating = 1100,     Color = "cyan" },
-            new RankInfo{ Name = "Gold Nova III",                   Tag = "GN3",    Rating = 1350,     Color = "cyan" },
-            new RankInfo{ Name = "Gold Nova Master",                Tag = "GNM",    Rating = 1500,     Color = "aqua" },
-            new RankInfo{ Name = "Master Guardian I",               Tag = "MG1",    Rating = 1650,     Color = "blue_green" },
-            new RankInfo{ Name = "Master Gaurdian II",              Tag = "MG2",    Rating = 1800,     Color = "blue_green" },
-            new RankInfo{ Name = "Master Gaurdian Elite",           Tag = "MGE",    Rating = 1950,     Color = "emerald" },
-            new RankInfo{ Name = "Distinguished Master Gaurdian",   Tag = "DMG",    Rating = 2100,     Color = "mint" },
-            new RankInfo{ Name = "Legendary Eagle",                 Tag = "LE",     Rating = 2250,     Color = "yellow" },
-            new RankInfo{ Name = "Legendary Eagle Master",          Tag = "LEM",    Rating = 2400,     Color = "yellow" },
-            new RankInfo{ Name = "Supreme Master First Class",      Tag = "SMFC",   Rating = 2550,     Color = "orange" },
-            new RankInfo{ Name = "Global Elite",                    Tag = "GE",     Rating = 2700,     Color = "crimson" },
-        };
+        public List<RankInfo> Ranks { get; set; } =
+        [
+            new() { Name = "Silver I",                        Tag = "S1",     Rating = -150,     Color = "nickel" },
+            new() { Name = "Silver II",                       Tag = "S2",     Rating = 0,        Color = "nickel" },
+            new() { Name = "Silver III",                      Tag = "S3",     Rating = 150,      Color = "nickel" },
+            new() { Name = "Silver IV",                       Tag = "S4",     Rating = 300,      Color = "nickel" },
+            new() { Name = "Silver Elite",                    Tag = "SE",     Rating = 550,      Color = "silver" },
+            new() { Name = "Silver Elite Master",             Tag = "SEM",    Rating = 700,      Color = "silver" },
+            new() { Name = "Gold Nova I",                     Tag = "GN1",    Rating = 950,      Color = "cyan" },
+            new() { Name = "Gold Nova II",                    Tag = "GN2",    Rating = 1100,     Color = "cyan" },
+            new() { Name = "Gold Nova III",                   Tag = "GN3",    Rating = 1350,     Color = "cyan" },
+            new() { Name = "Gold Nova Master",                Tag = "GNM",    Rating = 1500,     Color = "aqua" },
+            new() { Name = "Master Guardian I",               Tag = "MG1",    Rating = 1650,     Color = "blue_green" },
+            new() { Name = "Master Gaurdian II",              Tag = "MG2",    Rating = 1800,     Color = "blue_green" },
+            new() { Name = "Master Gaurdian Elite",           Tag = "MGE",    Rating = 1950,     Color = "emerald" },
+            new() { Name = "Distinguished Master Gaurdian",   Tag = "DMG",    Rating = 2100,     Color = "mint" },
+            new() { Name = "Legendary Eagle",                 Tag = "LE",     Rating = 2250,     Color = "yellow" },
+            new() { Name = "Legendary Eagle Master",          Tag = "LEM",    Rating = 2400,     Color = "yellow" },
+            new() { Name = "Supreme Master First Class",      Tag = "SMFC",   Rating = 2550,     Color = "orange" },
+            new() { Name = "Global Elite",                    Tag = "GE",     Rating = 2700,     Color = "crimson" },
+        ];
 
-        public List<PlayerPermissions> RankCmdPermissions { get; set; } = new List<PlayerPermissions>()
-        {
+        public List<PlayerPermissions> RankCmdPermissions { get; set; } =
+        [
             PlayerPermissions.ServerConsoleCommands
-        };
+        ];
     }
 
     public class RankInfo
@@ -96,9 +94,9 @@ namespace TheRiptide
         public static Ranks Singleton { get; private set; }
         public RankConfig config;
 
-        private Dictionary<int, Database.Rank> player_ranks = new Dictionary<int, Database.Rank>();
-        private Dictionary<string, GlickoPlayer> player_glikco = new Dictionary<string, GlickoPlayer>();
-        private Dictionary<string, List<GlickoOpponent>> player_matches = new Dictionary<string, List<GlickoOpponent>>();
+        private readonly Dictionary<int, Database.Rank> player_ranks = [];
+        private readonly Dictionary<string, GlickoPlayer> player_glikco = [];
+        private readonly Dictionary<string, List<GlickoOpponent>> player_matches = [];
 
         public Ranks()
         {
@@ -176,7 +174,7 @@ namespace TheRiptide
             if (rank.state != Database.RankState.Unranked && !player_glikco.ContainsKey(player.UserId))
             {
                 player_glikco.Add(player.UserId, new GlickoPlayer(rank.rating, rank.rd, rank.rv));
-                player_matches.Add(player.UserId, new List<GlickoOpponent>());
+                player_matches.Add(player.UserId, []);
             }
             SetBadge(player, rank);
             ShowRankHint(player, rank, 10.0f);
@@ -234,7 +232,7 @@ namespace TheRiptide
                         SetBadge(player, rank);
                     }
                 }
-                catch(System.Exception ex)
+                catch(Exception ex)
                 {
                     Logger.Error("rank save error: " + ex.ToString());
                 }
@@ -307,7 +305,7 @@ namespace TheRiptide
 
         public RankInfo GetInfo(Database.Rank rank)
         {
-            RankInfo info = new RankInfo { Name = config.UnrankedName, Tag = config.UnrankedTag, Color = config.UnrankedColor };
+            RankInfo info = new() { Name = config.UnrankedName, Tag = config.UnrankedTag, Color = config.UnrankedColor };
             if (rank.state == Database.RankState.Placement)
             {
                 info.Name = config.PlacementName;
@@ -353,13 +351,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_normalize_ranks";
 
-            public string[] Aliases { get; } = new string[] { "dmnr" };
+            public string[] Aliases { get; } = ["dmnr"];
 
             public string Description { get; } = "normalizes all ranks to be around 1500. usage: dm_normalize_ranks then soft restart";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.RankCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.RankCmdPermissions], out response))
                     return false;
 
                 Singleton.NormalizeRanks();
@@ -375,13 +373,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_delete_all_ranks";
 
-            public string[] Aliases { get; } = new string[] { "dmdar" };
+            public string[] Aliases { get; } = ["dmdar"];
 
             public string Description { get; } = "deletes all player ranks. usage: dm_delete_all_ranks";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.RankCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.RankCmdPermissions], out response))
                     return false;
 
                 Singleton.DeleteAllRanks();
@@ -397,18 +395,16 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_reset_rank";
 
-            public string[] Aliases { get; } = new string[] { "dmrr" };
+            public string[] Aliases { get; } = ["dmrr"];
 
             public string Description { get; } = "reset players rating. usage: dm_reset_rank [playerid]";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.RankCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.RankCmdPermissions], out response))
                     return false;
 
-                int id;
-                Player target = null;
-                if (!int.TryParse(arguments.ElementAt(0), out id) || !Player.TryGet(id, out target))
+                if (!int.TryParse(arguments.ElementAt(0), out int id) || !Player.TryGet(id, out Player target))
                 {
                     response = "failed - invalid id: " + arguments.ElementAt(0);
                     return false;
@@ -429,13 +425,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_set_rank";
 
-            public string[] Aliases { get; } = new string[] { "dsr"};
+            public string[] Aliases { get; } = ["dsr"];
 
             public string Description { get; } = "set players rating. usage: dm_set_rank [playerid] [rating]";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.RankCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.RankCmdPermissions], out response))
                     return false;
 
                 if (arguments.Count != 2)
@@ -444,16 +440,13 @@ namespace TheRiptide
                     return false;
                 }
 
-                int id;
-                Player target = null;
-                if (!int.TryParse(arguments.ElementAt(0), out id) || !Player.TryGet(id, out target))
+                if (!int.TryParse(arguments.ElementAt(0), out int id) || !Player.TryGet(id, out Player target))
                 {
                     response = "failed - invalid id: " + arguments.ElementAt(0);
                     return false;
                 }
 
-                int rating;
-                if (!int.TryParse(arguments.ElementAt(1), out rating))
+                if (!int.TryParse(arguments.ElementAt(1), out int rating))
                 {
                     response = "failed - invalid rating: " + arguments.ElementAt(1);
                     return false;
@@ -475,13 +468,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_get_rank";
 
-            public string[] Aliases { get; } = new string[] { "dmgr" };
+            public string[] Aliases { get; } = ["dmgr"];
 
             public string Description { get; } = "get players rating. usage: dm_get_rank [player_id]";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.RankCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.RankCmdPermissions], out response))
                     return false;
 
                 if (arguments.Count != 1)
@@ -490,9 +483,7 @@ namespace TheRiptide
                     return false;
                 }
 
-                int id;
-                Player target = null;
-                if (!int.TryParse(arguments.ElementAt(0), out id) || !Player.TryGet(id, out target))
+                if (!int.TryParse(arguments.ElementAt(0), out int id) || !Player.TryGet(id, out Player target))
                 {
                     response = "failed - invalid id: " + arguments.ElementAt(0);
                     return false;
@@ -513,13 +504,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_set_rank_state";
 
-            public string[] Aliases { get; } = new string[] { "dmrs" };
+            public string[] Aliases { get; } = ["dmrs"];
 
             public string Description { get; } = "set players rank state. usage: dm_set_rank_state [player_id] [state], states: 0 = Unranked 1 = Placement 2 = Ranked";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.RankCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.RankCmdPermissions], out response))
                     return false;
 
                 if(arguments.Count != 2)
@@ -528,16 +519,13 @@ namespace TheRiptide
                     return false;
                 }
 
-                int id;
-                Player target = null;
-                if (!int.TryParse(arguments.ElementAt(0), out id) || !Player.TryGet(id, out target))
+                if (!int.TryParse(arguments.ElementAt(0), out int id) || !Player.TryGet(id, out Player target))
                 {
                     response = "failed - invalid id: " + arguments.ElementAt(0);
                     return false;
                 }
 
-                int state;
-                if (!int.TryParse(arguments.ElementAt(1), out state))
+                if (!int.TryParse(arguments.ElementAt(1), out int state))
                 {
                     response = "failed - invalid state: " + arguments.ElementAt(1);
                     return false;

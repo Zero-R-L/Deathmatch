@@ -2,7 +2,6 @@
 using InventorySystem.Items;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.CustomHandlers;
-using LabApi.Features.Wrappers;
 using MEC;
 using PlayerStatsSystem;
 
@@ -13,9 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using static TheRiptide.Translation;
 
@@ -80,8 +76,8 @@ namespace TheRiptide
         public string BadgeFormat { get; set; } = "{tier} | {stage} | {level} | {value}";
         public string LeaderBoardFormat { get; set; } = "{tier} {stage} {level}";
         public string XpToNextLevelFormat { get; set; } = "XP: {xp}/{max}";
-        public List<string> LevelTags { get; set; } = new List<string>
-        {
+        public List<string> LevelTags { get; set; } =
+        [
             "Level: 1",
             "Level: 2",
             "Level: 3",
@@ -107,9 +103,9 @@ namespace TheRiptide
             "Level: 23",
             "Level: 24",
             "Level: 25",
-        };
-        public List<string> StageTags { get; set; } = new List<string>
-        {
+        ];
+        public List<string> StageTags { get; set; } =
+        [
             "Stage: 1",
             "Stage: 2",
             "Stage: 3",
@@ -117,9 +113,9 @@ namespace TheRiptide
             "Stage: 5",
             "Stage: 6",
             "Stage: 7",
-        };
-        public List<string> TierTags { get; set; } = new List<string>
-        {
+        ];
+        public List<string> TierTags { get; set; } =
+        [
             "Tier: 1",
             "Tier: 2",
             "Tier: 3",
@@ -127,10 +123,10 @@ namespace TheRiptide
             "Tier: 5",
             "Tier: 6",
             "Tier: 7",
-        };
+        ];
 
-        public List<string> LeaderBoardLevelTags { get; set; } = new List<string>
-        {
+        public List<string> LeaderBoardLevelTags { get; set; } =
+        [
             "L:1",
             "L:2",
             "L:3",
@@ -156,9 +152,9 @@ namespace TheRiptide
             "L:23",
             "L:24",
             "L:25",
-        };
-        public List<string> LeaderBoardStageTags { get; set; } = new List<string>
-        {
+        ];
+        public List<string> LeaderBoardStageTags { get; set; } =
+        [
             "S:1",
             "S:2",
             "S:3",
@@ -166,9 +162,9 @@ namespace TheRiptide
             "S:5",
             "S:6",
             "S:7",
-        };
-        public List<string> LeaderBoardTierTags { get; set; } = new List<string>
-        {
+        ];
+        public List<string> LeaderBoardTierTags { get; set; } =
+        [
             "T:1",
             "T:2",
             "T:3",
@@ -176,12 +172,12 @@ namespace TheRiptide
             "T:5",
             "T:6",
             "T:7",
-        };
+        ];
 
-        public List<PlayerPermissions> XpCmdPermissions { get; set; } = new List<PlayerPermissions>
-        {
+        public List<PlayerPermissions> XpCmdPermissions { get; set; } =
+        [
             PlayerPermissions.ServerConsoleCommands
-        };
+        ];
     }
 
     public class Experiences : CustomEventsHandler
@@ -204,9 +200,9 @@ namespace TheRiptide
             public int tier { get; set; } = 0;
         }
 
-        private Dictionary<int, XP> previous_xp = new Dictionary<int, XP>();
-        private Dictionary<int, XP> player_xp = new Dictionary<int, XP>();
-        private Dictionary<int, Tracking> player_tracking = new Dictionary<int, Tracking>();
+        private readonly Dictionary<int, XP> previous_xp = [];
+        private readonly Dictionary<int, XP> player_xp = [];
+        private readonly Dictionary<int, Tracking> player_tracking = [];
 
         public Experiences()
         {
@@ -513,13 +509,13 @@ namespace TheRiptide
 
             public string Command { get; } = "dm_set_xp";
 
-            public string[] Aliases { get; } = new string[] { "dmxp" };
+            public string[] Aliases { get; } = ["dmxp"];
 
             public string Description { get; } = "set players xp. usage: dm_set_xp [player_id] [value] [level] [stage] [tier], -1 = placeholder, -1 id = self";
 
             public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
             {
-                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission(Singleton.config.XpCmdPermissions.ToArray(), out response))
+                if (sender is PlayerCommandSender sender1 && !sender1.CheckPermission([.. Singleton.config.XpCmdPermissions], out response))
                     return false;
 
                 if (arguments.Count == 0)
@@ -528,8 +524,7 @@ namespace TheRiptide
                     return false;
                 }
 
-                Player player;
-                if (Player.TryGet(sender, out player))
+                if (Player.TryGet(sender, out Player player))
                 {
                     int id = -1;
                     int value = -1;
@@ -576,8 +571,7 @@ namespace TheRiptide
                     XP xp = Singleton.GetXP(player);
                     if (id != -1)
                     {
-                        Player target = null;
-                        if (!Player.TryGet(id, out target))
+                        if (!Player.TryGet(id, out Player target))
                         {
                             response = "failed - no player with id: " + id;
                             return false;

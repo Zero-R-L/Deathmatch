@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using LiteDB;
 
@@ -42,7 +42,7 @@ namespace TheRiptide
             public byte weapon { get; set; } = 0;
         }
 
-        public class Loadout : System.IEquatable<Loadout>
+        public class Loadout : IEquatable<Loadout>
         {
             public long LoadoutId { get; set; }
             public string killstreak_mode { get; set; } = "";
@@ -83,11 +83,11 @@ namespace TheRiptide
             [BsonRef("loadouts")]
             public Loadout loadout { get; set; } = null;
             [BsonRef("kills")]
-            public List<Kill> kills { get; set; } = new List<Kill>();
+            public List<Kill> kills { get; set; } = [];
             [BsonRef("hits")]
-            public List<Hit> delt { get; set; } = new List<Hit>();
+            public List<Hit> delt { get; set; } = [];
             [BsonRef("hits")]
-            public List<Hit> received { get; set; } = new List<Hit>();
+            public List<Hit> received { get; set; } = [];
             [BsonRef("kills")]
             public Kill death { get; set; } = null;
         }
@@ -95,8 +95,8 @@ namespace TheRiptide
         public class Round
         {
             public long RoundId { get; set; }
-            public System.DateTime start { get; set; } = System.DateTime.Now;
-            public System.DateTime end { get; set; } = System.DateTime.Now;
+            public DateTime start { get; set; } = System.DateTime.Now;
+            public DateTime end { get; set; } = System.DateTime.Now;
             public int max_players { get; set; } = 0;
         }
 
@@ -104,19 +104,19 @@ namespace TheRiptide
         {
             public long SessionId { get; set; }
             public string nickname { get; set; } = "*unconnected";
-            public System.DateTime connect { get; set; } = System.DateTime.Now;
-            public System.DateTime disconnect { get; set; } = System.DateTime.Now;
+            public DateTime connect { get; set; } = System.DateTime.Now;
+            public DateTime disconnect { get; set; } = System.DateTime.Now;
             [BsonRef("rounds")]
             public Round round { get; set; } = null;
             [BsonRef("lives")]
-            public List<Life> lives { get; set; } = new List<Life>();
+            public List<Life> lives { get; set; } = [];
         }
 
         public class Tracking
         {
             public long TrackingId { get; set; }
             [BsonRef("sessions")]
-            public List<Session> sessions { get; set; } = new List<Session>();
+            public List<Session> sessions { get; set; } = [];
         }
 
         public class User
@@ -167,8 +167,7 @@ namespace TheRiptide
         { 
             get 
             {
-                if (instance == null)
-                    instance = new Database();
+                instance ??= new Database();
                 return instance;
             }
         }
@@ -181,9 +180,11 @@ namespace TheRiptide
             (
                 serialize: (Hit h) =>
                 {
-                    BsonValue doc = new BsonDocument();
-                    doc["_id"] = h.HitId;
-                    doc["data"] = System.BitConverter.ToInt32(new byte[] { h.health, h.damage, h.hitbox, h.weapon }, 0);
+                    BsonValue doc = new BsonDocument
+                    {
+                        ["_id"] = h.HitId,
+                        ["data"] = System.BitConverter.ToInt32([h.health, h.damage, h.hitbox, h.weapon], 0)
+                    };
                     return doc;
                 },
                 deserialize: (BsonValue value) =>
@@ -213,7 +214,7 @@ namespace TheRiptide
 
         public void Checkpoint()
         {
-            DbAsync(() => DB.Checkpoint());
+            DbAsync(DB.Checkpoint);
         }
 
         public void LoadConfig(Player player)
@@ -252,7 +253,7 @@ namespace TheRiptide
             public bool IsReady { get { return loadout != null && spawn != null && killstreak != null; } }
         }
 
-        Dictionary<int, ConfigRef> config_cache = new Dictionary<int, ConfigRef>();
+        readonly Dictionary<int, ConfigRef> config_cache = [];
 
         public void SaveConfigLoadout(Player player)
         {
@@ -299,7 +300,7 @@ namespace TheRiptide
             {
                 var configs = DB.GetCollection<Config>("configs");
                 configs.EnsureIndex(x => x.UserId);
-                Config config = new Config { UserId = player.UserId };
+                Config config = new() { UserId = player.UserId };
                 config.primary = loadout.primary;
                 config.secondary = loadout.secondary;
                 config.tertiary = loadout.tertiary;
@@ -333,7 +334,7 @@ namespace TheRiptide
                         }
                         Ranks.Singleton.RankLoaded(player);
                     }
-                    catch (System.Exception ex)
+                    catch (Exception ex)
                     {
                         Logger.Error("database rank error: " + ex.ToString());
                     }
@@ -372,7 +373,7 @@ namespace TheRiptide
                         }
                         Experiences.Singleton.XpLoaded(player);
                     }
-                    catch(System.Exception ex)
+                    catch(Exception ex)
                     {
                         Logger.Error("database experience error: " + ex.ToString());
                     }
@@ -387,7 +388,7 @@ namespace TheRiptide
             {
                 var experiences = DB.GetCollection<Experience>("experiences");
                 experiences.EnsureIndex(x => x.UserId);
-                Experience xp = new Experience { UserId = player.UserId };
+                Experience xp = new() { UserId = player.UserId };
                 xp.value = player_xp.value;
                 xp.level = player_xp.level;
                 xp.stage = player_xp.stage;
@@ -446,8 +447,7 @@ namespace TheRiptide
                 if (!player.DoNotTrack)
                 {
                     User user = users.Include(x => x.tracking).FindById(player.UserId);
-                    if(user == null)
-                        user = new User { UserId = player.UserId };
+                    user ??= new User { UserId = player.UserId };
                     user.tracking.sessions.Add(session);
                     tracking.Upsert(user.tracking);
                     users.Upsert(user);
@@ -472,8 +472,7 @@ namespace TheRiptide
                     var leader_board = DB.GetCollection<LeaderBoard>("leader_board");
                     leader_board.EnsureIndex(x => x.UserId);
                     LeaderBoard lb = leader_board.FindById(player.UserId);
-                    if (lb == null)
-                        lb = new LeaderBoard { UserId = player.UserId };
+                    lb ??= new LeaderBoard { UserId = player.UserId };
 
                     lb.total_play_time += Mathf.CeilToInt((float)(session.disconnect - session.connect).TotalSeconds);
                     foreach(var life in session.lives)
@@ -521,9 +520,9 @@ namespace TheRiptide
         }
 
         private static readonly object dbWriteLock = new();
-        public void Async(System.Action<LiteDatabase> action)
+        public void Async(Action<LiteDatabase> action)
         {
-            new Task(() =>
+            Task.Run(() =>
             {
                 try
                 {
@@ -532,14 +531,14 @@ namespace TheRiptide
                         action.Invoke(DB);
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     Logger.Error("Database error: " + ex.ToString());
                 }
-            }).Start();
+            });
         }
 
-        private void DbAsync(System.Action action)
+        private void DbAsync(Action action)
         {
             Task.Run(() =>
             {
@@ -550,14 +549,14 @@ namespace TheRiptide
                         action.Invoke();
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     Logger.Error("Database error: " + ex.ToString());
                 }
             });
         }
 
-        private void DbDelayedAsync(System.Action action)
+        private void DbDelayedAsync(Action action)
         {
             Timing.CallDelayed(0.0f, () =>
             {
@@ -570,7 +569,7 @@ namespace TheRiptide
                             action.Invoke();
                         }
                     }
-                    catch (System.Exception ex)
+                    catch (Exception ex)
                     {
                         Logger.Error("Database error: " + ex.ToString());
                     }

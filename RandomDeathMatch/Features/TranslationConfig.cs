@@ -1,11 +1,5 @@
-﻿using CommandSystem;
-
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TheRiptide
 {
@@ -40,17 +34,17 @@ namespace TheRiptide
 
         [Description("loadout")]
         public string CustomisationHint { get; set; } = "<b>CHECK INVENTORY! <color=#FF0000>Right Click O5 to select gun</color></b>";
-        public List<string> CustomisationDenied { get; set; } = new List<string>() {
+        public List<string> CustomisationDenied { get; set; } = [
             "<color=#f8d107>Loadout can not be customised after shooting gun/using item</color>",
-            "<color=#43BFF0>Wait until next respawn</color>" };
+            "<color=#43BFF0>Wait until next respawn</color>" ];
         public string LastWeapon { get; set; } = "<color=#f8d107>last gun can not be deleted!</color>";
         public string WeaponBanned { get; set; } = "<color=#FF0000>{weapon} is currently banned</color>";
 
         [Description("lobby")]
         public string Teleport { get; set; } = "<color=#43BFF0>you will be teleported after selecting a gun</color>";
-        public List<string> WaitingForPlayers { get; set; } = new List<string>(){
+        public List<string> WaitingForPlayers { get; set; } = [
             "<color=#43BFF0>Waiting for 1 player to join</color>",
-            "<color=#43BFF0>You get to choose the starting area!</color>"};
+            "<color=#43BFF0>You get to choose the starting area!</color>"];
         public string Respawn { get; set; } = "<b><color=#FFFF00>Left/Right click to respawn</color></b>";
         public string Attachments { get; set; } = "<b><color=#FF0000>Tab to edit attachments/presets</color></b>";
         public string Teleporting { get; set; } = "<color=#43BFF0>Teleporting in 7 seconds</color>";

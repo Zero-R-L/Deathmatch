@@ -1,5 +1,4 @@
-﻿using AdminToys;
-using LabApi.Events.Arguments.PlayerEvents;
+﻿using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.CustomHandlers;
 using LabApi.Features.Wrappers;
@@ -8,11 +7,6 @@ using MEC;
 using Mirror;
 using PlayerRoles;
 using PlayerStatsSystem;
-
-
-
-
-using Respawning;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -51,9 +45,9 @@ namespace TheRiptide
             public int spawn_room = -1;
         }
 
-        public Dictionary<int, Spawn> player_spawns = new Dictionary<int, Spawn>();
-        private SortedSet<int> avaliable_spawn_rooms = new SortedSet<int>();
-        private List<GameObject> blocks = new List<GameObject>();
+        public Dictionary<int, Spawn> player_spawns = [];
+        private readonly SortedSet<int> avaliable_spawn_rooms = [];
+        private readonly List<GameObject> blocks = [];
         private bool round_started = false;
 
         public Lobby()
@@ -394,7 +388,7 @@ namespace TheRiptide
             NetworkServer.Spawn(obj);
         }
 
-        static Vector3 offset = new Vector3(42.656f, 400f, -47.25f);
+        static Vector3 offset = new(42.656f, 400f, -47.25f);
 
         private void BuildSpawn(int x, int y)
         {
@@ -443,11 +437,11 @@ namespace TheRiptide
                 {
                     RoomIdentifier surface = RoomIdentifier.AllRoomIdentifiers.Where((r) => r.Zone == FacilityZone.Surface).First();
                     List<Vector3> positions = Teleport.RoomPositions(surface);
-                    List<bool> occupied_positions = new List<bool>(positions.Count);
+                    List<bool> occupied_positions = new(positions.Count);
                     foreach (var p in positions)
                         occupied_positions.Add(false);
 
-                    HashSet<RoomIdentifier> occupied_rooms = new HashSet<RoomIdentifier>();
+                    HashSet<RoomIdentifier> occupied_rooms = [];
                     foreach (Player p in Player.ReadyList)
                     {
                         if (Rooms.ValidPlayerInRoom(p))
@@ -474,7 +468,7 @@ namespace TheRiptide
                     if (occupied_positions.All((occupied) => occupied))
                         occupied_positions.Add(surface);
 
-                    HashSet<RoomIdentifier> occupied_adjacent_rooms = new HashSet<RoomIdentifier>();
+                    HashSet<RoomIdentifier> occupied_adjacent_rooms = [];
                     foreach(var o in occupied_rooms)
                     {
                         occupied_adjacent_rooms.Add(o);
@@ -489,7 +483,7 @@ namespace TheRiptide
                     if (available_rooms.IsEmpty())
                         available_rooms = opened_rooms;
 
-                    System.Random random = new System.Random();
+                    System.Random random = new();
                     RoomIdentifier room = null;
                     if (!available_rooms.IsEmpty())
                         room = available_rooms.ElementAt(random.Next(available_rooms.Count()));
@@ -499,7 +493,7 @@ namespace TheRiptide
                             Teleport.Room(player, room);
                         else
                         {
-                            List<int> indexes = new List<int>();
+                            List<int> indexes = [];
                             for(int i = 0; i < occupied_positions.Count; i++)
                                 if (!occupied_positions[i])
                                     indexes.Add(i);

@@ -1,17 +1,12 @@
 ﻿using LabApi.Events.CustomHandlers;
 using LabApi.Features.Wrappers;
 using MEC;
-using Mirror;
-using PlayerRoles.Ragdolls;
 
 
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TheRiptide
 {
@@ -19,17 +14,15 @@ namespace TheRiptide
     {
         public bool IsEnabled { get; set; } = true;
         [Description("items to not cleanup when the round start e.g. scp207, medkits ect... [see global reference config for types]")]
-        public List<ItemType> InitialCleanupWhitelist { get; set; } = new List<ItemType>
-        {
-        };
+        public List<ItemType> InitialCleanupWhitelist { get; set; } = [];
 
         [Description("how often to cleanup items in seconds. -1 = never")]
         public int ItemCleanupPeriod = 1;
         [Description("items to cleanup throughout the round if dropped by player [see global reference config for types]\n# armor, gun, keycards are automaticaly deleted")]
-        public List<ItemType> ItemCleanupBlacklist { get; set; } = new List<ItemType>
-        {
+        public List<ItemType> ItemCleanupBlacklist { get; set; } =
+        [
             ItemType.Jailbird
-        };
+        ];
 
         [Description("how often to cleanup ragdolls in seconds. -1 = never")]
         public int RagdollCleanupPeriod { get; set; } = -1;

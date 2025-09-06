@@ -14,7 +14,6 @@ using System.ComponentModel;
 using static TheRiptide.Translation;
 using LabApi.Events.CustomHandlers;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Features.Wrappers;
 
 namespace TheRiptide
 {
@@ -41,13 +40,13 @@ namespace TheRiptide
         public RoomsConfig config;
 
         //private static bool open_facility = false;
-        private static Dictionary<RoomIdentifier, int> opened_rooms = new Dictionary<RoomIdentifier, int>();
-        private static Dictionary<RoomIdentifier, float> closing_rooms = new Dictionary<RoomIdentifier, float>();
-        private static Dictionary<RoomIdentifier, int> closed_rooms = new Dictionary<RoomIdentifier, int>();
+        private static readonly Dictionary<RoomIdentifier, int> opened_rooms = [];
+        private static readonly Dictionary<RoomIdentifier, float> closing_rooms = [];
+        private static readonly Dictionary<RoomIdentifier, int> closed_rooms = [];
 
-        private static CoroutineHandle update_handle = new CoroutineHandle();
-        private static CoroutineHandle light_update_handle = new CoroutineHandle();
-        private static CoroutineHandle decontamination_update_handle = new CoroutineHandle();
+        private static CoroutineHandle update_handle = new();
+        private static CoroutineHandle light_update_handle = new();
+        private static CoroutineHandle decontamination_update_handle = new();
 
         public static IEnumerable<RoomIdentifier> OpenedRooms { get { return opened_rooms.Keys; } }
 
@@ -163,7 +162,7 @@ namespace TheRiptide
             Timing.KillCoroutines(update_handle, light_update_handle, decontamination_update_handle);
         }
 
-        private static IEnumerable<RoomIdentifier> ValidRooms = RoomIdentifier.AllRoomIdentifiers.Where((r) => r.Zone != FacilityZone.Other && r.Zone != FacilityZone.None);
+        private static readonly IEnumerable<RoomIdentifier> ValidRooms = RoomIdentifier.AllRoomIdentifiers.Where((r) => r.Zone != FacilityZone.Other && r.Zone != FacilityZone.None);
 
         public void UnlockFacility()
         {
@@ -224,8 +223,8 @@ namespace TheRiptide
 
             for (int i = 0; i < count; i++)
             {
-                HashSet<RoomIdentifier> candidate_set = new HashSet<RoomIdentifier>();
-                HashSet<RoomIdentifier> backup_set = new HashSet<RoomIdentifier>();
+                HashSet<RoomIdentifier> candidate_set = [];
+                HashSet<RoomIdentifier> backup_set = [];
                 foreach (var room in opened_rooms.Keys)
                 {
                     foreach (var adj in FacilityManager.GetAdjacent(room).Keys)
@@ -239,7 +238,7 @@ namespace TheRiptide
 
                 if (!candidate_set.IsEmpty())
                 {
-                    System.Random random = new System.Random();
+                    System.Random random = new();
                     while(true)
                     {
                         var room = candidate_set.ElementAt(random.Next(candidate_set.Count()));
@@ -267,12 +266,12 @@ namespace TheRiptide
 
         public void ShrinkFacility(int count)
         {
-            System.Random random = new System.Random();
+            System.Random random = new();
             for (int i = 0; i < count; i++)
             {
                 if (!opened_rooms.IsEmpty())
                 {
-                    Dictionary<RoomIdentifier, bool> visited = new Dictionary<RoomIdentifier, bool>();
+                    Dictionary<RoomIdentifier, bool> visited = [];
                     foreach (var room in opened_rooms.Keys)
                         visited.Add(room, false);
 
@@ -391,7 +390,7 @@ namespace TheRiptide
                         }
                     }
 
-                    List<RoomIdentifier> close = new List<RoomIdentifier>();
+                    List<RoomIdentifier> close = [];
                     foreach (RoomIdentifier key in closing_rooms.Keys.ToList())
                     {
                         closing_rooms[key] -= delta;
@@ -414,8 +413,7 @@ namespace TheRiptide
         private void OpenRoom(RoomIdentifier room)
         {
             FacilityManager.ResetRoomLight(room);
-            HashSet<RoomIdentifier> joined_rooms = new HashSet<RoomIdentifier>();
-            joined_rooms.Add(room);
+            HashSet<RoomIdentifier> joined_rooms = [room];
             foreach (var adj in FacilityManager.GetAdjacent(room).Keys)
                 if (opened_rooms.ContainsKey(adj) || closing_rooms.ContainsKey(adj))
                     joined_rooms.Add(adj);

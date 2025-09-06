@@ -8,8 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TheRiptide
 {
@@ -23,9 +21,9 @@ namespace TheRiptide
                 public float duration = -1.0f;
             }
 
-            SortedDictionary<int, Hint> active_hints = new SortedDictionary<int, Hint>();
-            Stopwatch stop_watch = new Stopwatch();
-            CoroutineHandle handle = new CoroutineHandle();
+            readonly SortedDictionary<int, Hint> active_hints = [];
+            readonly Stopwatch stop_watch = new();
+            CoroutineHandle handle = new();
 
             public HintInfo()
             {
@@ -111,7 +109,7 @@ namespace TheRiptide
             }
         }
 
-        private static Dictionary<int, HintInfo> hint_info = new Dictionary<int, HintInfo>();
+        private static readonly Dictionary<int, HintInfo> hint_info = [];
 
         public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
         {

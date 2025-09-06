@@ -1,5 +1,4 @@
-﻿using InventorySystem.Items.Firearms;
-using PlayerStatsSystem;
+﻿using PlayerStatsSystem;
 
 
 
@@ -8,11 +7,9 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 using CustomPlayerEffects;
-using PlayerRoles;
 using static TheRiptide.Translation;
 using LabApi.Events.CustomHandlers;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Features.Wrappers;
 
 namespace TheRiptide
 {
@@ -44,9 +41,9 @@ namespace TheRiptide
             public float start_time = 0;
         }
 
-        public static Dictionary<int, Dictionary<int, LifeStats>> attacker_stats = new Dictionary<int, Dictionary<int, LifeStats>>();
+        public static Dictionary<int, Dictionary<int, LifeStats>> attacker_stats = [];
 
-        public static Dictionary<int, Stats> player_stats = new Dictionary<int, Stats>();
+        public static Dictionary<int, Stats> player_stats = [];
         private static Action<ReferenceHub, DamageHandlerBase> OnPlayerDamaged;
 
         public static void Init()
@@ -92,7 +89,7 @@ namespace TheRiptide
                 player_stats.Add(id, new Stats());
 
             if (!attacker_stats.ContainsKey(id))
-                attacker_stats.Add(id, new Dictionary<int, LifeStats>());
+                attacker_stats.Add(id, []);
         }
 
         public override void OnPlayerLeft(PlayerLeftEventArgs ev)
@@ -139,8 +136,7 @@ namespace TheRiptide
                     string hint = translation.DeathMsgKiller.Replace("{killer}", "<b><color=" + Killstreaks.Singleton.KillstreakColorCode(killer) + ">"+ killer.Nickname + "</color></b>").Replace("{health}", killer.Health.ToString("0"));
                     try
                     {
-                        AhpStat ahp = null;
-                        if (killer.ReferenceHub.playerStats.TryGetModule(out ahp))
+                        if (killer.ReferenceHub.playerStats.TryGetModule(out AhpStat ahp))
                             hint += translation.DeathMsgAhp.Replace("{ahp}", ahp.CurValue.ToString("0"));
                     }
                     catch(Exception ex)
@@ -148,17 +144,15 @@ namespace TheRiptide
                         Logger.Error("Error could not get Ahp of player: " + ex.ToString());
                     }
 
-                    DamageReduction damage_reduction = null;
-                    if (killer.ReferenceHub.playerEffectsController.TryGetEffect(out damage_reduction))
+                    if (killer.ReferenceHub.playerEffectsController.TryGetEffect(out DamageReduction damage_reduction))
                     {
                         if (damage_reduction.IsEnabled && damage_reduction.Intensity != 0)
                             hint += translation.DeathMsgDamageReduction.Replace("{reduction}", (damage_reduction.Intensity / 2.0f).ToString("0.0"));
                     }
 
-                    BodyshotReduction bodyshot_reduction = null;
-                    if(killer.ReferenceHub.playerEffectsController.TryGetEffect(out bodyshot_reduction))
+                    if (killer.ReferenceHub.playerEffectsController.TryGetEffect(out BodyshotReduction bodyshot_reduction))
                     {
-                        if(bodyshot_reduction.IsEnabled && bodyshot_reduction.Intensity != 0)
+                        if (bodyshot_reduction.IsEnabled && bodyshot_reduction.Intensity != 0)
                         {
                             float percentage = 0.0f;
                             if (bodyshot_reduction.Intensity == 1)
@@ -243,7 +237,7 @@ namespace TheRiptide
                 int vid = victim.PlayerId;
                 int aid = attacker.PlayerId;
 
-                LifeStats life_stats = new LifeStats();
+                LifeStats life_stats = new();
                 if (!attacker_stats[aid].ContainsKey(vid))
                     attacker_stats[aid].Add(vid, life_stats);
                 else

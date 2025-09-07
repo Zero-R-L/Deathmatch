@@ -184,7 +184,7 @@ namespace TheRiptide
                 newInstructions.InsertRange(index,
                 [
                     new CodeInstruction(OpCodes.Ldloc_0).MoveLabelsFrom(newInstructions[index]),
-                    new(OpCodes.Call, AccessTools.Method(typeof(VoiceChat), nameof(VoiceChat.OnPlayerTogglingNoClip))),
+                    new(OpCodes.Call, AccessTools.Method(typeof(VoiceChat), nameof(OnPlayerTogglingNoClip))),
                     new(OpCodes.Brfalse, ret),
                 ]);
 

@@ -117,7 +117,7 @@ namespace TheRiptide
             int id = player.PlayerId;
             if (player_sessions.ContainsKey(id))
             {
-                player_sessions[player.PlayerId].disconnect = System.DateTime.Now;
+                player_sessions[player.PlayerId].disconnect = DateTime.Now;
                 Database.Singleton.SaveTrackingSession(player);
                 if (!DmRound.game_ended && !player.DoNotTrack)
                     Database.Singleton.UpdateLeaderBoard(player);
@@ -226,10 +226,11 @@ namespace TheRiptide
 
                     var weapon_attachments = AttachmentsServerHandler.PlayerPreferences[player.ReferenceHub];
                     Loadouts.Loadout player_loadout = Loadouts.GetLoadout(player);
-                    Database.Loadout new_loadout = new();
-
-                    new_loadout.killstreak_mode = Killstreaks.GetKillstreak(player).name;
-                    new_loadout.primary = player_loadout.primary;
+                    Database.Loadout new_loadout = new()
+                    {
+                        killstreak_mode = Killstreaks.GetKillstreak(player).name,
+                        primary = player_loadout.primary
+                    };
                     if (weapon_attachments.ContainsKey(player_loadout.primary))
                         new_loadout.primary_attachment_code = weapon_attachments[player_loadout.primary];
                     new_loadout.secondary = player_loadout.secondary;

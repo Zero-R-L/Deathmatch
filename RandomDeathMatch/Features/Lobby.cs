@@ -91,11 +91,11 @@ namespace TheRiptide
             if (!round_started)
             {
                 round_started = true;
-                MEC.Timing.CallDelayed(1.0f, () => { Round.Start(); });
+                Timing.CallDelayed(1.0f, () => { Round.Start(); });
             }
             else
             {
-                MEC.Timing.CallDelayed(1.0f, () => { if (!player.IsAlive) { RespawnPlayer(player); } });
+                Timing.CallDelayed(1.0f, () => { if (!player.IsAlive) { RespawnPlayer(player); } });
             }
 
             if (Player.Count == 1)
@@ -367,7 +367,7 @@ namespace TheRiptide
         private void BuildBlock(GameObject prefab, Vector3 offset, Vector3 size)
         {
             Vector3 mid = (offset + (offset + size)) / 2.0f;
-            GameObject obj = NetworkManager.Instantiate(prefab, mid, Quaternion.Euler(Vector3.zero));
+            GameObject obj = UnityEngine.Object.Instantiate(prefab, mid, Quaternion.Euler(Vector3.zero));
             PrimitiveObjectToy toy = obj.GetComponent<PrimitiveObjectToy>();
             toy.NetworkScale = size;
             toy.NetworkPrimitiveType = PrimitiveType.Cube;
@@ -379,7 +379,7 @@ namespace TheRiptide
 
         private void AddLight(Vector3 position, Color color, float intensity, float range)
         {
-            GameObject obj = NetworkManager.Instantiate(NetworkManager.singleton.spawnPrefabs.Where((x) => x.name == "LightSourceToy").First(), position, Quaternion.Euler(Vector3.zero));
+            GameObject obj = UnityEngine.Object.Instantiate(NetworkManager.singleton.spawnPrefabs.Where((x) => x.name == "LightSourceToy").First(), position, Quaternion.Euler(Vector3.zero));
             LightSourceToy toy = obj.GetComponent<LightSourceToy>();
             toy.LightColor = color;
             toy.LightIntensity = intensity;

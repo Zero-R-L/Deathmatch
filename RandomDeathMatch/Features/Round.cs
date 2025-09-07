@@ -78,6 +78,7 @@ namespace TheRiptide
         public void WaitingForPlayers()
         {
             game_ended = false;
+            DecontaminationController.Singleton.DecontaminationOverride = DecontaminationController.DecontaminationStatus.Disabled;
             Database.Singleton.Checkpoint();
         }
 
@@ -130,7 +131,7 @@ namespace TheRiptide
                 }
             });
 
-            Logger.Info($"Server.Host.IpAddress: {Server.Host.IpAddress == null}");
+            //Logger.Info($"Server.Host.IpAddress: {Server.Host.IpAddress == null}");
             Server.Host.SetRole(RoleTypeId.Scp939);
             Server.Host.ReferenceHub.nicknameSync.SetNick(config.DummyPlayerName);
             Server.Host.Position = new Vector3(128.8f, 994.0f, 18.0f);

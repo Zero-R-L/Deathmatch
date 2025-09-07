@@ -39,7 +39,7 @@ namespace TheRiptide
         {
             Singleton = this;
         }
-        internal const string VersionString = "2.2.1";
+        internal const string VersionString = "2.2.2";
         public static Deathmatch Singleton { get; private set; }
         public override string Name => "Deathmatch";
         public override string Description => null;
